@@ -16,6 +16,7 @@ libspot = "0.1.0"
 ## Quick Start
 
 ```rust
+use rand;
 use libspot::{SpotDetector, SpotConfig, SpotStatus};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
