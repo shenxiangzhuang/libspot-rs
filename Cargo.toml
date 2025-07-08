@@ -9,7 +9,6 @@ readme = "README.md"
 license = "LGPL-3.0"
 description = "Rust bindings for libspot, a fast time series anomaly detector"
 keywords = ["Spot", "TimeSeries", "AnomalyDetection"]
-license-file = "libspot/LICENSE.md"
 exclude = [
     # Exclude all libspot subdirectories except essential ones (src/, include/)
     "libspot/docs/",
