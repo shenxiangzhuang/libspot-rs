@@ -1,0 +1,75 @@
+name: C
+
+on:
+  pull_request:
+    paths:
+      - "src/*.c"
+      - "include/*.h"
+      - "Makefile"
+      - .github/workflows/build.yaml
+      - test/src/*.c
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: sudo apt update -y && sudo apt install -y build-essential
+
+      - name: Build shared library
+        run: make
+
+      - name: Build static library
+        run: make static
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libspot
+          path: |
+            dist/libspot.so*
+            dist/libspot.a*
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: libspot
+          path: dist/
+
+      - name: Rename library
+        run: mv dist/libspot.so* dist/libspot.so
+
+      - name: Test
+        run: make test
+
+  install:
+    name: Install
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: libspot
+          path: dist/
+
+      - name: Install
+        run: sudo make install
+
+      - name: Test simple program
+        run: |
+          gcc -O3 -std=c99 -Iinclude/ -Wall -Wextra -Werror -pedantic -o basic examples/basic.c -lspot -lm
+          ./basic

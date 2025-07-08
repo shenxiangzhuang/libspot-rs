@@ -1,0 +1,3 @@
+[submodule "libspot"]
+	path = libspot
+	url = git@github.com:asiffer/libspot.git

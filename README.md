@@ -1,0 +1,99 @@
+# libspot
+
+A safe Rust wrapper for the [libspot](https://github.com/asiffer/libspot) anomaly detection library.
+
+**libspot** implements the SPOT (Streaming Peaks Over Threshold) algorithm for real-time anomaly detection in data streams. This crate provides safe, idiomatic Rust bindings with proper error handling and memory management.
+
+## Installation
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+libspot = "0.1.0"
+```
+
+## Quick Start
+
+```rust
+use libspot::{SpotDetector, SpotConfig, SpotStatus};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create detector with default configuration
+    let config = SpotConfig::default();
+    let mut detector = SpotDetector::new(config)?;
+    
+    // Fit with training data
+    let training_data: Vec<f64> = (0..1000)
+        .map(|_| rand::random::<f64>() * 10.0)
+        .collect();
+    detector.fit(&training_data)?;
+    
+    // Detect anomalies in real-time
+    let test_value = 50.0; // This should be an anomaly
+    match detector.step(test_value)? {
+        SpotStatus::Normal => println!("Normal data point"),
+        SpotStatus::Excess => println!("In the tail distribution"),
+        SpotStatus::Anomaly => println!("Anomaly detected! 🚨"),
+    }
+    
+    Ok(())
+}
+```
+
+## Examples
+
+### Basic Usage
+
+```bash
+cargo run --example simple
+```
+
+A minimal example showing basic anomaly detection:
+
+```rust
+use libspot::{SpotDetector, SpotConfig, SpotStatus};
+
+let mut detector = SpotDetector::new(SpotConfig::default())?;
+detector.fit(&training_data)?;
+
+for value in data_stream {
+    match detector.step(value)? {
+        SpotStatus::Anomaly => handle_anomaly(value),
+        _ => continue,
+    }
+}
+```
+
+### Performance Benchmark
+
+```bash
+cargo run --example basic
+```
+
+A comprehensive benchmark that processes 50 million samples, demonstrating the library's performance and replicating the original C example.
+
+
+
+## License
+
+This project is licensed under the **GNU Lesser General Public License v3.0 (LGPL-3.0)** to comply with the underlying [libspot](https://github.com/asiffer/libspot) C library license.
+
+### License Compliance
+
+This crate includes the libspot C library as a submodule and provides Rust bindings to it. As required by the LGPL-3.0 license:
+
+- The complete source code of the libspot C library is included in the `libspot/` directory
+- The original LGPL-3.0 license is preserved in `libspot/LICENSE.md`
+- Users can modify and relink the C library with their applications
+- The Rust bindings are designed to work with modified versions of the C library
+
+For full license terms, see [LICENSE](LICENSE) and [libspot/LICENSE.md](libspot/LICENSE.md).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## Related Projects
+
+- [libspot](https://github.com/asiffer/libspot) - The underlying C library
