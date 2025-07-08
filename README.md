@@ -10,7 +10,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-libspot = "0.1.0"
+libspot = ">=2.0.0-beta.3.0"
 ```
 
 ## Quick Start
