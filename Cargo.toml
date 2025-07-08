@@ -9,28 +9,18 @@ readme = "README.md"
 license = "LGPL-3.0"
 description = "Rust bindings for libspot, a fast time series anomaly detector"
 keywords = ["Spot", "TimeSeries", "AnomalyDetection"]
-exclude = [
-    # Exclude all libspot subdirectories except essential ones (src/, include/)
-    "libspot/docs/",
-    "libspot/.github/",
-    "libspot/benchmark/",
-    "libspot/examples/",
-    "libspot/python/",
-    "libspot/snap/",
-    "libspot/test/",
-    "libspot/unity/",
-    "libspot/wasm/",
-    # Exclude other unnecessary libspot files
-    "libspot/.clang-format",
-    "libspot/.gitignore",
+
+# Include style (current) - Note: may include extra files due to git submodule behavior
+include = [
+    "src/**/*",
+    "examples/**/*",
+    "libspot/Makefile",
+    "libspot/LICENSE.md",
     "libspot/README.md",
-    "libspot/doxyfile",
-    "libspot/mkdocs.yml",
-    "libspot/.git",
-    # Exclude build artifacts and VCS files
-    "target/",
-    ".git/",
-    ".gitmodules",
+    "libspot/src/**/*.c",
+    "libspot/include/**/*.h",
+    "./README.md",
+    "./LICENSE",
 ]
 
 [dependencies]
