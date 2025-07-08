@@ -8,8 +8,31 @@ repository = "https://github.com/shenxiangzhuang/libspot-rs"
 readme = "README.md"
 license = "LGPL-3.0"
 description = "Rust bindings for libspot, a fast time series anomaly detector"
-keywords = ["Spot", "TimeSeries", "Detector", "Anomaly", "AnomalyDetection"]
+keywords = ["Spot", "TimeSeries", "AnomalyDetection"]
 license-file = "libspot/LICENSE.md"
+exclude = [
+    # Exclude all libspot subdirectories except essential ones (src/, include/)
+    "libspot/docs/",
+    "libspot/.github/",
+    "libspot/benchmark/",
+    "libspot/examples/",
+    "libspot/python/",
+    "libspot/snap/",
+    "libspot/test/",
+    "libspot/unity/",
+    "libspot/wasm/",
+    # Exclude other unnecessary libspot files
+    "libspot/.clang-format",
+    "libspot/.gitignore",
+    "libspot/README.md",
+    "libspot/doxyfile",
+    "libspot/mkdocs.yml",
+    "libspot/.git",
+    # Exclude build artifacts and VCS files
+    "target/",
+    ".git/",
+    ".gitmodules",
+]
 
 [dependencies]
 libc = "0.2"
