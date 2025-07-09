@@ -13,7 +13,7 @@ jobs:
   format-and-test:
     name: Format and Test
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -66,4 +66,4 @@ jobs:
       run: cargo test --test basic_example test_basic_example_behavior --verbose
 
     - name: Run doc tests
-      run: cargo test --doc --verbose 
+      run: cargo test --doc --verbose
