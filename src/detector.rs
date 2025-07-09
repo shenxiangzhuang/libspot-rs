@@ -140,4 +140,4 @@ impl Drop for SpotDetector {
 }
 
 // Safety: SpotDetector can be safely sent between threads as long as it's not used concurrently
-unsafe impl Send for SpotDetector {} 
+unsafe impl Send for SpotDetector {}

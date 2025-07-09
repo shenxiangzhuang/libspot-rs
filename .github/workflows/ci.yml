@@ -1,0 +1,217 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable, beta]
+        exclude:
+          # Skip beta on Windows and macOS to reduce CI time
+          - os: windows-latest
+            rust: beta
+          - os: macos-latest
+            rust: beta
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ matrix.rust }}
+        components: rustfmt, clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential pkg-config
+
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install pkg-config
+
+    - name: Install system dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        # Windows should have build tools available
+        echo "Windows build tools should be available"
+
+    - name: Build C library (Unix)
+      if: matrix.os != 'windows-latest'
+      run: |
+        cd libspot
+        make clean
+        make
+
+    - name: Build C library (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        cd libspot
+        # Use Visual Studio build tools
+        # Note: This might need adjustment based on libspot's Windows build system
+        make
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Run clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Build
+      run: cargo build --verbose
+
+    - name: Run unit tests
+      run: cargo test --lib
+
+    - name: Run integration tests
+      run: cargo test --test integration
+
+    - name: Run basic example test
+      run: cargo test --test basic_example test_basic_example_behavior
+
+    - name: Run doc tests
+      run: cargo test --doc
+
+  # Separate job for the full-scale test to avoid timeout
+  full-scale-test:
+    name: Full Scale Test
+    runs-on: ubuntu-latest
+    # Only run on main branch to avoid long CI times on PRs
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential pkg-config
+
+    - name: Build C library
+      run: |
+        cd libspot
+        make clean
+        make
+
+    - name: Run full-scale basic example test
+      run: cargo test --test basic_example test_basic_example_full_scale -- --ignored --nocapture
+
+  # Code coverage job
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: llvm-tools-preview
+
+    - name: Install cargo-llvm-cov
+      uses: taiki-e/install-action@cargo-llvm-cov
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential pkg-config
+
+    - name: Build C library
+      run: |
+        cd libspot
+        make clean
+        make
+
+    - name: Generate code coverage
+      run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: lcov.info
+        fail_ci_if_error: true
+
+  # Security audit
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install cargo-audit
+      uses: taiki-e/install-action@cargo-audit
+
+    - name: Run security audit
+      run: cargo audit
+
+  # Check for outdated dependencies
+  outdated:
+    name: Check Outdated Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install cargo-outdated
+      uses: taiki-e/install-action@cargo-outdated
+
+    - name: Check for outdated dependencies
+      run: cargo outdated --exit-code 1 

@@ -33,10 +33,10 @@ mod tests {
     #[test]
     fn test_spot_config_default() {
         let config = SpotConfig::default();
-        
+
         assert_relative_eq!(config.q, 0.0001);
-        assert_eq!(config.low_tail, false);
-        assert_eq!(config.discard_anomalies, true);
+        assert!(!config.low_tail);
+        assert!(config.discard_anomalies);
         assert_relative_eq!(config.level, 0.998);
         assert_eq!(config.max_excess, 200);
     }
@@ -50,10 +50,10 @@ mod tests {
             level: 0.995,
             max_excess: 500,
         };
-        
+
         assert_relative_eq!(config.q, 0.00001);
-        assert_eq!(config.low_tail, true);
-        assert_eq!(config.discard_anomalies, false);
+        assert!(config.low_tail);
+        assert!(!config.discard_anomalies);
         assert_relative_eq!(config.level, 0.995);
         assert_eq!(config.max_excess, 500);
     }
@@ -62,7 +62,7 @@ mod tests {
     fn test_spot_config_debug() {
         let config = SpotConfig::default();
         let debug_str = format!("{:?}", config);
-        
+
         assert!(debug_str.contains("SpotConfig"));
         assert!(debug_str.contains("q: 0.0001"));
         assert!(debug_str.contains("low_tail: false"));
@@ -75,7 +75,7 @@ mod tests {
     fn test_spot_config_clone() {
         let config1 = SpotConfig::default();
         let config2 = config1.clone();
-        
+
         assert_relative_eq!(config1.q, config2.q);
         assert_eq!(config1.low_tail, config2.low_tail);
         assert_eq!(config1.discard_anomalies, config2.discard_anomalies);
@@ -88,16 +88,16 @@ mod tests {
         // Test typical configuration values used in anomaly detection
         let high_sensitivity = SpotConfig {
             q: 0.00001,  // Very sensitive
-            level: 0.99,  // Lower threshold
+            level: 0.99, // Lower threshold
             ..Default::default()
         };
-        
+
         let low_sensitivity = SpotConfig {
-            q: 0.001,    // Less sensitive
+            q: 0.001,     // Less sensitive
             level: 0.999, // Higher threshold
             ..Default::default()
         };
-        
+
         assert!(high_sensitivity.q < low_sensitivity.q);
         assert!(high_sensitivity.level < low_sensitivity.level);
     }
@@ -108,14 +108,14 @@ mod tests {
             low_tail: false,
             ..Default::default()
         };
-        
+
         let lower_tail = SpotConfig {
             low_tail: true,
             ..Default::default()
         };
-        
-        assert_eq!(upper_tail.low_tail, false);
-        assert_eq!(lower_tail.low_tail, true);
+
+        assert!(!upper_tail.low_tail);
+        assert!(lower_tail.low_tail);
     }
 
     #[test]
@@ -124,14 +124,14 @@ mod tests {
             discard_anomalies: false,
             ..Default::default()
         };
-        
+
         let discard_anomalies = SpotConfig {
             discard_anomalies: true,
             ..Default::default()
         };
-        
-        assert_eq!(keep_anomalies.discard_anomalies, false);
-        assert_eq!(discard_anomalies.discard_anomalies, true);
+
+        assert!(!keep_anomalies.discard_anomalies);
+        assert!(discard_anomalies.discard_anomalies);
     }
 
     #[test]
@@ -140,13 +140,13 @@ mod tests {
             max_excess: 50,
             ..Default::default()
         };
-        
+
         let large_buffer = SpotConfig {
             max_excess: 1000,
             ..Default::default()
         };
-        
+
         assert_eq!(small_buffer.max_excess, 50);
         assert_eq!(large_buffer.max_excess, 1000);
     }
-} 
+}

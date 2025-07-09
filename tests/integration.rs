@@ -1,5 +1,5 @@
-use libspot::{SpotConfig, SpotDetector, SpotError, SpotStatus};
 use approx::assert_relative_eq;
+use libspot::{SpotConfig, SpotDetector, SpotError, SpotStatus};
 
 /// Test basic SPOT detector initialization - validates that our binding correctly initializes the C library
 #[test]
@@ -18,7 +18,7 @@ fn test_spot_detector_initialization() {
 
     let detector = detector.expect("Failed to create detector");
     let retrieved_config = detector.config().unwrap();
-    
+
     // Verify configuration is preserved
     assert_relative_eq!(retrieved_config.q, config.q);
     assert_eq!(retrieved_config.low_tail, config.low_tail);
@@ -97,14 +97,16 @@ fn test_spot_fitting() {
 fn test_spot_step_function() {
     let config = SpotConfig {
         q: 1e-3,
-        level: 0.95,  // Less strict threshold
+        level: 0.95, // Less strict threshold
         discard_anomalies: true,
         ..SpotConfig::default()
     };
     let mut detector = SpotDetector::new(config).unwrap();
 
     // Create wider training data range
-    let training_data: Vec<f64> = (0..1000).map(|i| ((i as f64 / 500.0) - 1.0) * 2.0).collect(); // Range: -2 to 2
+    let training_data: Vec<f64> = (0..1000)
+        .map(|i| ((i as f64 / 500.0) - 1.0) * 2.0)
+        .collect(); // Range: -2 to 2
     detector.fit(&training_data).unwrap();
 
     // Test NaN input - should match C library behavior
@@ -135,7 +137,13 @@ fn test_spot_step_function() {
     }
 
     // Most values should be normal since they're below the excess threshold
-    assert!(normal_count > 0, "Should have some normal classifications, got normal={}, excess={}, anomaly={}", normal_count, excess_count, anomaly_count);
+    assert!(
+        normal_count > 0,
+        "Should have some normal classifications, got normal={}, excess={}, anomaly={}",
+        normal_count,
+        excess_count,
+        anomaly_count
+    );
 
     // Test extreme values that should trigger anomalies
     let extreme_result = detector.step(1000.0);
@@ -159,7 +167,10 @@ fn test_quantile_behavior() {
 
     assert!(q_low.is_finite(), "Quantile should be finite");
     assert!(q_high.is_finite(), "Quantile should be finite");
-    assert!(q_high > q_low, "Lower probability should give higher quantile");
+    assert!(
+        q_high > q_low,
+        "Lower probability should give higher quantile"
+    );
 }
 
 /// Test configuration retrieval
@@ -178,7 +189,10 @@ fn test_config_retrieval() {
 
     assert_relative_eq!(retrieved_config.q, original_config.q);
     assert_eq!(retrieved_config.low_tail, original_config.low_tail);
-    assert_eq!(retrieved_config.discard_anomalies, original_config.discard_anomalies);
+    assert_eq!(
+        retrieved_config.discard_anomalies,
+        original_config.discard_anomalies
+    );
     assert_relative_eq!(retrieved_config.level, original_config.level);
     assert_eq!(retrieved_config.max_excess, original_config.max_excess);
 }
@@ -254,4 +268,4 @@ fn test_multiple_detectors() {
 
     // Verify they have different configurations
     assert_ne!(det1.config().unwrap().level, det2.config().unwrap().level);
-} 
+}

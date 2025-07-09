@@ -62,4 +62,4 @@ extern "C" {
     pub fn libspot_version(buffer: *mut c_char, size: c_ulong);
     // pub fn libspot_error(err: c_int, buffer: *mut c_char, size: c_ulong);
     pub fn set_allocators(m: MallocFn, f: FreeFn);
-} 
+}

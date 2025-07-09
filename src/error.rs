@@ -109,13 +109,19 @@ mod tests {
     #[test]
     fn test_spot_error_from_code() {
         // Test all known error codes
-        assert_eq!(SpotError::from_code(-1000), SpotError::MemoryAllocationFailed);
+        assert_eq!(
+            SpotError::from_code(-1000),
+            SpotError::MemoryAllocationFailed
+        );
         assert_eq!(SpotError::from_code(-1001), SpotError::LevelOutOfBounds);
         assert_eq!(SpotError::from_code(-1002), SpotError::QOutOfBounds);
         assert_eq!(SpotError::from_code(-1003), SpotError::ExcessThresholdIsNaN);
-        assert_eq!(SpotError::from_code(-1004), SpotError::AnomalyThresholdIsNaN);
+        assert_eq!(
+            SpotError::from_code(-1004),
+            SpotError::AnomalyThresholdIsNaN
+        );
         assert_eq!(SpotError::from_code(-1005), SpotError::DataIsNaN);
-        
+
         // Test unknown error code
         assert_eq!(SpotError::from_code(-9999), SpotError::Unknown(-9999));
     }
@@ -156,10 +162,7 @@ mod tests {
             SpotError::AnomalyThresholdIsNaN.to_string(),
             "The anomaly threshold has not been initialized"
         );
-        assert_eq!(
-            SpotError::DataIsNaN.to_string(),
-            "The input data is NaN"
-        );
+        assert_eq!(SpotError::DataIsNaN.to_string(), "The input data is NaN");
         assert_eq!(
             SpotError::NotInitialized.to_string(),
             "Detector not initialized"
@@ -177,7 +180,7 @@ mod tests {
             SpotError::NotInitialized.message(),
             "Detector not initialized"
         );
-        
+
         // Note: We can't easily test the C library message function here
         // without linking to the C library, but we can test the structure
     }
@@ -187,7 +190,7 @@ mod tests {
         let error1 = SpotError::LevelOutOfBounds;
         let error2 = error1.clone();
         assert_eq!(error1, error2);
-        
+
         let error3 = SpotError::QOutOfBounds;
         assert_ne!(error1, error3);
     }
@@ -203,10 +206,12 @@ mod tests {
     fn test_spot_result_type() {
         let result_ok: SpotResult<i32> = Ok(42);
         let result_err: SpotResult<i32> = Err(SpotError::LevelOutOfBounds);
-        
+
         assert!(result_ok.is_ok());
         assert!(result_err.is_err());
-        assert_eq!(result_err.unwrap_err(), SpotError::LevelOutOfBounds);
+        if let Err(error) = result_err {
+            assert_eq!(error, SpotError::LevelOutOfBounds);
+        }
     }
 
     #[test]
@@ -215,4 +220,4 @@ mod tests {
         // Test that it implements the Error trait
         let _: &dyn std::error::Error = &error;
     }
-} 
+}

@@ -1,5 +1,5 @@
-use libspot::{SpotConfig, SpotDetector, SpotStatus};
 use approx::assert_relative_eq;
+use libspot::{SpotConfig, SpotDetector, SpotStatus};
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
 struct CRand;
@@ -75,19 +75,28 @@ fn test_basic_example_behavior() {
 
     // Verify the behavior is consistent with expectations
     assert!(normal > 0, "Should have normal classifications");
-    assert!(excess > 0, "Should have excess classifications"); 
+    assert!(excess > 0, "Should have excess classifications");
     assert!(anomaly > 0, "Should have anomaly classifications");
-    
+
     // The total should equal k
     assert_eq!(normal + excess + anomaly, k);
 
     // Verify thresholds are reasonable
     let anomaly_threshold = detector.anomaly_threshold();
     let excess_threshold = detector.excess_threshold();
-    
-    assert!(anomaly_threshold > excess_threshold, "Anomaly threshold should be higher than excess threshold");
-    assert!(anomaly_threshold > 0.0, "Anomaly threshold should be positive");
-    assert!(excess_threshold > 0.0, "Excess threshold should be positive");
+
+    assert!(
+        anomaly_threshold > excess_threshold,
+        "Anomaly threshold should be higher than excess threshold"
+    );
+    assert!(
+        anomaly_threshold > 0.0,
+        "Anomaly threshold should be positive"
+    );
+    assert!(
+        excess_threshold > 0.0,
+        "Excess threshold should be positive"
+    );
 
     println!("Test results (1M samples):");
     println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
@@ -152,19 +161,31 @@ fn test_basic_example_full_scale() {
     let expected_t = 6.236165;
 
     // Validate results match C library exactly
-    assert_eq!(anomaly, expected_anomaly, "Anomaly count should match C library");
-    assert_eq!(excess, expected_excess, "Excess count should match C library");
-    assert_eq!(normal, expected_normal, "Normal count should match C library");
+    assert_eq!(
+        anomaly, expected_anomaly,
+        "Anomaly count should match C library"
+    );
+    assert_eq!(
+        excess, expected_excess,
+        "Excess count should match C library"
+    );
+    assert_eq!(
+        normal, expected_normal,
+        "Normal count should match C library"
+    );
 
     // Validate thresholds match (allow small floating point differences)
     let z = detector.anomaly_threshold();
     let t = detector.excess_threshold();
-    
+
     assert_relative_eq!(z, expected_z, epsilon = 1e-5);
     assert_relative_eq!(t, expected_t, epsilon = 1e-5);
 
-    println!("Full scale test completed in {:.2}s", duration.as_secs_f64());
+    println!(
+        "Full scale test completed in {:.2}s",
+        duration.as_secs_f64()
+    );
     println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
     println!("Z={:.6} T={:.6}", z, t);
     println!("✓ All results match C library exactly!");
-} 
+}

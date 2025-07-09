@@ -40,7 +40,7 @@ mod tests {
         assert_eq!(SpotStatus::from(0), SpotStatus::Normal);
         assert_eq!(SpotStatus::from(1), SpotStatus::Excess);
         assert_eq!(SpotStatus::from(2), SpotStatus::Anomaly);
-        
+
         // Test default fallback for unknown values
         assert_eq!(SpotStatus::from(-1), SpotStatus::Normal);
         assert_eq!(SpotStatus::from(99), SpotStatus::Normal);
@@ -60,7 +60,7 @@ mod tests {
         assert_eq!(SpotStatus::Normal, SpotStatus::Normal);
         assert_eq!(SpotStatus::Excess, SpotStatus::Excess);
         assert_eq!(SpotStatus::Anomaly, SpotStatus::Anomaly);
-        
+
         assert_ne!(SpotStatus::Normal, SpotStatus::Excess);
         assert_ne!(SpotStatus::Excess, SpotStatus::Anomaly);
         assert_ne!(SpotStatus::Normal, SpotStatus::Anomaly);
@@ -71,8 +71,8 @@ mod tests {
         // Test that SpotStatus is Copy and Clone
         let status1 = SpotStatus::Excess;
         let status2 = status1; // Copy
-        let status3 = status1.clone(); // Clone
-        
+        let status3 = status1; // Copy
+
         assert_eq!(status1, status2);
         assert_eq!(status1, status3);
     }
@@ -81,13 +81,13 @@ mod tests {
     fn test_spot_status_match() {
         // Test pattern matching
         let status = SpotStatus::Excess;
-        
+
         let result = match status {
             SpotStatus::Normal => "normal",
             SpotStatus::Excess => "excess",
             SpotStatus::Anomaly => "anomaly",
         };
-        
+
         assert_eq!(result, "excess");
     }
-} 
+}
