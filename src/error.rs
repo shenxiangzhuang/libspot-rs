@@ -90,7 +90,7 @@ impl fmt::Display for SpotError {
             }
             SpotError::DataIsNaN => write!(f, "The input data is NaN"),
             SpotError::NotInitialized => write!(f, "Detector not initialized"),
-            SpotError::Unknown(code) => write!(f, "Unknown error (code: {})", code),
+            SpotError::Unknown(code) => write!(f, "Unknown error (code: {code})"),
         }
     }
 }
@@ -198,7 +198,7 @@ mod tests {
     #[test]
     fn test_spot_error_debug() {
         let error = SpotError::LevelOutOfBounds;
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("LevelOutOfBounds"));
     }
 

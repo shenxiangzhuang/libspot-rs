@@ -99,8 +99,8 @@ fn test_basic_example_behavior() {
     );
 
     println!("Test results (1M samples):");
-    println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
-    println!("Z={:.6} T={:.6}", anomaly_threshold, excess_threshold);
+    println!("ANOMALY={anomaly} EXCESS={excess} NORMAL={normal}");
+    println!("Z={anomaly_threshold:.6} T={excess_threshold:.6}");
 }
 
 /// Full scale test that matches the C basic example exactly
@@ -139,7 +139,7 @@ fn test_basic_example_full_scale() {
     let mut excess = 0;
     let mut anomaly = 0;
 
-    println!("Starting full scale test with {} samples...", k);
+    println!("Starting full scale test with {k} samples...");
     let start = std::time::Instant::now();
 
     for _ in 0..k {
@@ -185,7 +185,7 @@ fn test_basic_example_full_scale() {
         "Full scale test completed in {:.2}s",
         duration.as_secs_f64()
     );
-    println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
-    println!("Z={:.6} T={:.6}", z, t);
+    println!("ANOMALY={anomaly} EXCESS={excess} NORMAL={normal}");
+    println!("Z={z:.6} T={t:.6}");
     println!("✓ All results match C library exactly!");
 }

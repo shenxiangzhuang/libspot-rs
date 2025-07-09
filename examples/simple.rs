@@ -26,9 +26,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for value in test_values {
         match detector.step(value)? {
-            SpotStatus::Normal => println!("Value {:.1}: NORMAL", value),
-            SpotStatus::Excess => println!("Value {:.1}: EXCESS (in tail)", value),
-            SpotStatus::Anomaly => println!("Value {:.1}: ANOMALY! 🚨", value),
+            SpotStatus::Normal => println!("Value {value:.1}: NORMAL"),
+            SpotStatus::Excess => println!("Value {value:.1}: EXCESS (in tail)"),
+            SpotStatus::Anomaly => println!("Value {value:.1}: ANOMALY! 🚨"),
         }
     }
 

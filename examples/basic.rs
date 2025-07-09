@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get library version
     let lib_version = version();
-    println!("libspot version: {}", lib_version);
+    println!("libspot version: {lib_version}");
 
     // Configure SPOT detector
     let config = SpotConfig {
@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Fit the model
     detector.fit(&initial_data)?;
-    println!("Model successfully fitted with {} data points", n);
+    println!("Model successfully fitted with {n} data points");
 
     // Main detection loop
     let k = 50_000_000;
@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut excess = 0;
     let mut anomaly = 0;
 
-    println!("Starting anomaly detection on {} samples...", k);
+    println!("Starting anomaly detection on {k} samples...");
     let start = Instant::now();
 
     for _ in 0..k {
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Print results
     println!("{:.6}", duration.as_secs_f64());
-    println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
+    println!("ANOMALY={anomaly} EXCESS={excess} NORMAL={normal}");
     println!(
         "Z={:.6} T={:.6}",
         detector.anomaly_threshold(),

@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn test_spot_config_debug() {
         let config = SpotConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("SpotConfig"));
         assert!(debug_str.contains("q: 0.0001"));

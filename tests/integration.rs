@@ -139,10 +139,7 @@ fn test_spot_step_function() {
     // Most values should be normal since they're below the excess threshold
     assert!(
         normal_count > 0,
-        "Should have some normal classifications, got normal={}, excess={}, anomaly={}",
-        normal_count,
-        excess_count,
-        anomaly_count
+        "Should have some normal classifications, got normal={normal_count}, excess={excess_count}, anomaly={anomaly_count}"
     );
 
     // Test extreme values that should trigger anomalies
@@ -202,7 +199,7 @@ fn test_config_retrieval() {
 fn test_version_function() {
     let version = libspot::version();
     assert!(!version.is_empty(), "Version should not be empty");
-    println!("Library version: {}", version);
+    println!("Library version: {version}");
 }
 
 /// Test that detector properly handles different data sizes
