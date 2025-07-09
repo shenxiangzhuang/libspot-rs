@@ -1,4 +1,5 @@
 use libspot::{SpotConfig, SpotDetector, SpotError, SpotStatus};
+use approx::assert_relative_eq;
 
 /// Test basic SPOT detector initialization - validates that our binding correctly initializes the C library
 #[test]
@@ -19,10 +20,10 @@ fn test_spot_detector_initialization() {
     let retrieved_config = detector.config().unwrap();
     
     // Verify configuration is preserved
-    assert_eq!(retrieved_config.q, config.q);
+    assert_relative_eq!(retrieved_config.q, config.q);
     assert_eq!(retrieved_config.low_tail, config.low_tail);
     assert_eq!(retrieved_config.discard_anomalies, config.discard_anomalies);
-    assert_eq!(retrieved_config.level, config.level);
+    assert_relative_eq!(retrieved_config.level, config.level);
     assert_eq!(retrieved_config.max_excess, config.max_excess);
 
     // Test low_tail mode
@@ -175,10 +176,10 @@ fn test_config_retrieval() {
     let detector = SpotDetector::new(original_config.clone()).unwrap();
     let retrieved_config = detector.config().unwrap();
 
-    assert_eq!(retrieved_config.q, original_config.q);
+    assert_relative_eq!(retrieved_config.q, original_config.q);
     assert_eq!(retrieved_config.low_tail, original_config.low_tail);
     assert_eq!(retrieved_config.discard_anomalies, original_config.discard_anomalies);
-    assert_eq!(retrieved_config.level, original_config.level);
+    assert_relative_eq!(retrieved_config.level, original_config.level);
     assert_eq!(retrieved_config.max_excess, original_config.max_excess);
 }
 

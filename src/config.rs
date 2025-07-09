@@ -28,15 +28,16 @@ impl Default for SpotConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn test_spot_config_default() {
         let config = SpotConfig::default();
         
-        assert_eq!(config.q, 0.0001);
+        assert_relative_eq!(config.q, 0.0001);
         assert_eq!(config.low_tail, false);
         assert_eq!(config.discard_anomalies, true);
-        assert_eq!(config.level, 0.998);
+        assert_relative_eq!(config.level, 0.998);
         assert_eq!(config.max_excess, 200);
     }
 
@@ -50,10 +51,10 @@ mod tests {
             max_excess: 500,
         };
         
-        assert_eq!(config.q, 0.00001);
+        assert_relative_eq!(config.q, 0.00001);
         assert_eq!(config.low_tail, true);
         assert_eq!(config.discard_anomalies, false);
-        assert_eq!(config.level, 0.995);
+        assert_relative_eq!(config.level, 0.995);
         assert_eq!(config.max_excess, 500);
     }
 
@@ -75,10 +76,10 @@ mod tests {
         let config1 = SpotConfig::default();
         let config2 = config1.clone();
         
-        assert_eq!(config1.q, config2.q);
+        assert_relative_eq!(config1.q, config2.q);
         assert_eq!(config1.low_tail, config2.low_tail);
         assert_eq!(config1.discard_anomalies, config2.discard_anomalies);
-        assert_eq!(config1.level, config2.level);
+        assert_relative_eq!(config1.level, config2.level);
         assert_eq!(config1.max_excess, config2.max_excess);
     }
 
