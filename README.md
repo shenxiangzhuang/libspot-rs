@@ -10,25 +10,26 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-libspot = "0.1.0"
+libspot = ">=2.0.0-beta.3.0"
 ```
 
 ## Quick Start
 
 ```rust
+use rand;
 use libspot::{SpotDetector, SpotConfig, SpotStatus};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create detector with default configuration
     let config = SpotConfig::default();
     let mut detector = SpotDetector::new(config)?;
-    
+
     // Fit with training data
     let training_data: Vec<f64> = (0..1000)
         .map(|_| rand::random::<f64>() * 10.0)
         .collect();
     detector.fit(&training_data)?;
-    
+
     // Detect anomalies in real-time
     let test_value = 50.0; // This should be an anomaly
     match detector.step(test_value)? {
@@ -36,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SpotStatus::Excess => println!("In the tail distribution"),
         SpotStatus::Anomaly => println!("Anomaly detected! 🚨"),
     }
-    
+
     Ok(())
 }
 ```

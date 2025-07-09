@@ -8,10 +8,25 @@ repository = "https://github.com/shenxiangzhuang/libspot-rs"
 readme = "README.md"
 license = "LGPL-3.0"
 description = "Rust bindings for libspot, a fast time series anomaly detector"
-keywords = ["Spot", "TimeSeries", "Detector", "Anomaly", "AnomalyDetection"]
-license-file = "libspot/LICENSE.md"
+keywords = ["Spot", "TimeSeries", "AnomalyDetection"]
+
+# Include style (current) - Note: may include extra files due to git submodule behavior
+include = [
+    "src/**/*",
+    "examples/**/*",
+    "libspot/Makefile",
+    "libspot/LICENSE.md",
+    "libspot/README.md",
+    "libspot/src/**/*.c",
+    "libspot/include/**/*.h",
+    "./README.md",
+    "./LICENSE",
+]
 
 [dependencies]
 libc = "0.2"
 rand = "0.9.1"
 rand_pcg = "0.9.0"
+
+[dev-dependencies]
+approx = "0.5.1"
