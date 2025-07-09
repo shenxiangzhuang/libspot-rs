@@ -7,6 +7,7 @@ use crate::ffi::{self, SpotRaw};
 use crate::status::SpotStatus;
 
 /// A SPOT detector for streaming anomaly detection
+#[derive(Debug)]
 pub struct SpotDetector {
     raw: MaybeUninit<SpotRaw>,
     initialized: bool,
