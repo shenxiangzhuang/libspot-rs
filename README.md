@@ -51,7 +51,7 @@ This wrapper provides identical results to the original C implementation. The [`
 | **Normal** | 49,902,164 | 49,902,164 | ✓ |
 | **Performance** | ~5.7s | ~5.5s | ✓ |
 
-Run the benchmark: `cargo run -r --example basic`(with `-r` flag to run the example in release mode)
+Run the benchmark: `cargo run -r --example basic`(with `-r` flag to run the example in release mode).
 
 ## License
 
