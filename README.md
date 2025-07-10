@@ -42,7 +42,7 @@ cargo run --example basic
 
 ## Correctness & Performance
 
-This wrapper provides identical results to the original C implementation. The [`basic.rs`](./examples/basic.rs) example processes 50M samples and produces the same anomaly counts and thresholds as the reference [`basic.c`](https://asiffer.github.io/libspot/20_get_started/) implementation:
+This wrapper provides identical results to the original C implementation. The [`basic.rs`](./examples/basic.rs) example processes 50M samples and produces the **exact same** anomaly counts and thresholds as the reference [`basic.c`](https://asiffer.github.io/libspot/20_get_started/) implementation:
 
 | Metric | C Implementation | Rust Wrapper | Identical |
 |:------:|:----------------:|:------------:|:--------:|
@@ -55,7 +55,7 @@ We run the benchmark with:
 - Rust: `cargo run -r --example basic`(with `-r` flag to run the example in release mode).
 - C: `cc -O3 -o /tmp/basic examples/basic.c -Idist/ -Ldist/ -l:libspot.so.2.0b3 -lm && LD_LIBRARY_PATH=dist /tmp/basic`(with `-O3` flag to compile the example in release mode).
 
-As you can see, the performance is very close.(You may get different results due to the different hardware and environment, but the results should be very similar.)
+As you can see, the performance is **very close**. You may get different results due to the different hardware and environment, but the results should be very similar.
 
 ## License
 
