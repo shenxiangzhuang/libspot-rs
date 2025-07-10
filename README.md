@@ -49,6 +49,8 @@ This wrapper provides identical results to the original C implementation. The [`
 | **Anomalies** | 25,898 | 25,898 | ✓ |
 | **Excess** | 71,938 | 71,938 | ✓ |
 | **Normal** | 49,902,164 | 49,902,164 | ✓ |
+| **Z** | 7.422655 | 7.422655 | ✓ |
+| **T** | 6.236165 | 6.236165 | ✓ |
 | **Performance** | ~5.476262s | ~5.479736s | ✓ |
 
 We run the benchmark with:
