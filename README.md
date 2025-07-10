@@ -1,10 +1,6 @@
 # libspot-rs
 
-A safe Rust wrapper for the [libspot](https://github.com/asiffer/libspot) anomaly detection library.
-
-**libspot** implements the SPOT (Streaming Peaks Over Threshold) algorithm for real-time anomaly detection in data streams. 
-This crate provides safe, idiomatic Rust bindings with proper error handling and memory management.
-
+A safe Rust wrapper for the [libspot](https://github.com/asiffer/libspot) time series anomaly detection library.
 
 ## Quick Start
 
@@ -35,8 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-
 ## License
 
-This project is licensed under the **GNU Lesser General Public License v3.0 (LGPL-3.0)** 
+This project is licensed under the **GNU Lesser General Public License v3.0 (LGPL-3.0)**
 to comply with the underlying [libspot](https://github.com/asiffer/libspot) C library license.
