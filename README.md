@@ -40,6 +40,19 @@ cargo run --example simple
 cargo run --example basic
 ```
 
+## Correctness & Performance
+
+This wrapper provides identical results to the original C implementation. The [`basic.rs`](./examples/basic.rs) example processes 50M samples and produces the same anomaly counts and thresholds as the reference [`basic.c`](https://asiffer.github.io/libspot/20_get_started/) implementation:
+
+| Metric | C Implementation | Rust Wrapper | Identical |
+|:------:|:----------------:|:------------:|:--------:|
+| **Anomalies** | 25,898 | 25,898 | ✓ |
+| **Excess** | 71,938 | 71,938 | ✓ |
+| **Normal** | 49,902,164 | 49,902,164 | ✓ |
+| **Performance** | ~5.7s | ~5.5s | ✓ |
+
+Run the benchmark: `cargo run -r --example basic`(with `-r` flag to run the example in release mode)
+
 ## License
 
 This project is licensed under the **GNU Lesser General Public License v3.0 (LGPL-3.0)**
