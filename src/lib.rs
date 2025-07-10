@@ -1,9 +1,4 @@
-//! # libspot
-//!
-//! A Rust wrapper for the libspot anomaly detection library.
-//!
-//! This crate provides safe Rust bindings for the libspot library, which implements
-//! the SPOT (Streaming Peaks Over Threshold) algorithm for anomaly detection.
+#![doc = include_str!("../README.md")]
 
 use std::os::raw::{c_char, c_ulong};
 
