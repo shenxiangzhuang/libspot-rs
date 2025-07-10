@@ -49,9 +49,13 @@ This wrapper provides identical results to the original C implementation. The [`
 | **Anomalies** | 25,898 | 25,898 | ✓ |
 | **Excess** | 71,938 | 71,938 | ✓ |
 | **Normal** | 49,902,164 | 49,902,164 | ✓ |
-| **Performance** | ~5.7s | ~5.5s | ✓ |
+| **Performance** | ~5.476262s | ~5.479736s | ✓ |
 
-Run the benchmark: `cargo run -r --example basic`(with `-r` flag to run the example in release mode).
+We run the benchmark with:
+- Rust: `cargo run -r --example basic`(with `-r` flag to run the example in release mode).
+- C: `cc -O3 -o /tmp/basic examples/basic.c -Idist/ -Ldist/ -l:libspot.so.2.0b3 -lm && LD_LIBRARY_PATH=dist /tmp/basic`(with `-O3` flag to compile the example in release mode).
+
+As you can see, the performance is very close.(You may get different results due to the different hardware and environment, but the results should be very similar.)
 
 ## License
 
