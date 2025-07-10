@@ -5,7 +5,6 @@ A safe Rust wrapper for the [libspot](https://github.com/asiffer/libspot) time s
 ## Quick Start
 
 ```rust
-use rand;
 use libspot::{SpotDetector, SpotConfig, SpotStatus};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -13,9 +12,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = SpotConfig::default();
     let mut detector = SpotDetector::new(config)?;
 
-    // Fit with training data
+    // Fit with training data (normal distribution around 5.0)
     let training_data: Vec<f64> = (0..1000)
-        .map(|_| rand::random::<f64>() * 10.0)
+        .map(|i| 5.0 + (i as f64 * 0.01).sin() * 2.0)
         .collect();
     detector.fit(&training_data)?;
 
@@ -29,6 +28,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+```
+
+## Examples
+
+See the [examples](./examples) directory for more usage examples.
+You can run the examples with `cargo run --example <example_name>`:
+
+```bash
+cargo run --example simple
+cargo run --example basic
 ```
 
 ## License

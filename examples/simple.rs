@@ -12,9 +12,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = SpotConfig::default();
     let mut detector = SpotDetector::new(config)?;
 
-    // Generate some training data (normal data)
+    // Generate some training data (normal distribution around 5.0)
     let training_data: Vec<f64> = (0..1000)
-        .map(|_| rand::random::<f64>() * 10.0) // Random values 0-10
+        .map(|i| 5.0 + (i as f64 * 0.01).sin() * 2.0) // Sine wave pattern
         .collect();
 
     // Fit the model
