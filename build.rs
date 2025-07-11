@@ -4,54 +4,41 @@ use std::path::Path;
 use std::process::Command;
 
 fn main() {
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let out_dir = env::var("OUT_DIR").unwrap();
+    let libspot_dir = Path::new(&env::var("CARGO_MANIFEST_DIR").unwrap()).join("libspot");
+    let build_dir = Path::new(&out_dir).join("libspot");
 
-    // Path to the libspot directory
-    let libspot_dir = Path::new(&manifest_dir).join("libspot");
-    let dist_dir = libspot_dir.join("dist");
+    // Copy source and build in OUT_DIR
+    Command::new("cp")
+        .args([
+            "-r",
+            &libspot_dir.to_string_lossy(),
+            &build_dir.to_string_lossy(),
+        ])
+        .status()
+        .expect("Failed to copy libspot source");
 
-    // Build libspot using make
-    let output = Command::new("make")
-        .current_dir(&libspot_dir)
-        .output()
-        .expect("Failed to build libspot. Make sure you have make installed.");
+    Command::new("make")
+        .current_dir(&build_dir)
+        .status()
+        .expect("Failed to build libspot");
 
-    if !output.status.success() {
-        panic!(
-            "Failed to build libspot: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
+    // Copy built library to OUT_DIR
+    fs::copy(
+        build_dir.join("dist/libspot.a.2.0b3"),
+        Path::new(&out_dir).join("libspot.a"),
+    )
+    .expect("Failed to copy library");
 
-    // Create symlinks without version numbers so Rust can find them
-    let static_lib_versioned = dist_dir.join("libspot.a.2.0b3");
-    let static_lib = dist_dir.join("libspot.a");
-    let shared_lib_versioned = dist_dir.join("libspot.so.2.0b3");
-    let shared_lib = dist_dir.join("libspot.so");
+    // Tell cargo where to find native libraries (search in OUT_DIR)
+    println!("cargo:rustc-link-search=native={out_dir}");
 
-    // Remove old symlinks if they exist
-    let _ = fs::remove_file(&static_lib);
-    let _ = fs::remove_file(&shared_lib);
-
-    // Create new symlinks
-    #[cfg(unix)]
-    {
-        std::os::unix::fs::symlink(&static_lib_versioned, &static_lib)
-            .expect("Failed to create symlink for libspot.a");
-        std::os::unix::fs::symlink(&shared_lib_versioned, &shared_lib)
-            .expect("Failed to create symlink for libspot.so");
-    }
-
-    println!("cargo:rerun-if-changed=libspot/");
-    println!("cargo:rerun-if-changed=libspot/src/");
-    println!("cargo:rerun-if-changed=libspot/Makefile");
-
-    // Tell cargo where to find the library
-    println!("cargo:rustc-link-search=native={}", dist_dir.display());
-
-    // Link against the static library (prefer static over shared for portability)
+    // Link against the static libspot library
     println!("cargo:rustc-link-lib=static=spot");
 
-    // Also need to link math library since libspot uses it
+    // Link against the math library (required by libspot)
     println!("cargo:rustc-link-lib=m");
+
+    // Rerun build script if libspot source files change
+    println!("cargo:rerun-if-changed=libspot/");
 }
