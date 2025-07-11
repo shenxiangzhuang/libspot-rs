@@ -31,7 +31,7 @@ fn main() {
     .expect("Failed to copy library");
 
     // Tell cargo where to find native libraries (search in OUT_DIR)
-    println!("cargo:rustc-link-search=native={}", out_dir);
+    println!("cargo:rustc-link-search=native={out_dir}");
 
     // Link against the static libspot library
     println!("cargo:rustc-link-lib=static=spot");
