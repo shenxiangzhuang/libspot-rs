@@ -45,7 +45,7 @@ pub struct SpotRaw {
 }
 
 // FFI declarations
-#[link(name = "spot")]
+#[link(name = "spot", kind = "static")]
 extern "C" {
     pub fn spot_init(
         spot: *mut SpotRaw,
