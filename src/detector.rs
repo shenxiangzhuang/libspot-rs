@@ -1,10 +1,20 @@
 use std::mem::MaybeUninit;
 use std::os::raw::c_ulong;
+use std::sync::Once;
 
 use crate::config::SpotConfig;
 use crate::error::{SpotError, SpotResult};
 use crate::ffi::{self, SpotRaw};
 use crate::status::SpotStatus;
+
+static INIT_ALLOCATORS: Once = Once::new();
+
+/// Initialize libspot allocators (called once per process)
+fn init_allocators() {
+    INIT_ALLOCATORS.call_once(|| unsafe {
+        ffi::set_allocators(libc::malloc, libc::free);
+    });
+}
 
 /// A SPOT detector for streaming anomaly detection
 #[derive(Debug)]
@@ -16,10 +26,8 @@ pub struct SpotDetector {
 impl SpotDetector {
     /// Create a new SPOT detector with the given configuration
     pub fn new(config: SpotConfig) -> SpotResult<Self> {
-        // Initialize allocators
-        unsafe {
-            ffi::set_allocators(libc::malloc, libc::free);
-        }
+        // Initialize allocators once per process
+        init_allocators();
 
         let mut detector = SpotDetector {
             raw: MaybeUninit::uninit(),
