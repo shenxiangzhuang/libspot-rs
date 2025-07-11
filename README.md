@@ -1,6 +1,15 @@
 # libspot-rs
 
+[![Crates.io](https://img.shields.io/crates/v/libspot.svg)](https://crates.io/crates/libspot)
+[![CI Status](https://github.com/shenxiangzhuang/libspot-rs/workflows/Format%20and%20Test/badge.svg)](https://github.com/shenxiangzhuang/libspot-rs/actions)
+
 A safe Rust wrapper for the [libspot](https://github.com/asiffer/libspot) time series anomaly detection library.
+
+## Installation
+
+```bash
+cargo add libspot
+```
 
 ## Quick Start
 
