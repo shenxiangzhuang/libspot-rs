@@ -45,6 +45,7 @@ pub struct SpotRaw {
 }
 
 // FFI declarations
+#[cfg(not(target_arch = "wasm32"))]
 #[link(name = "spot", kind = "static")]
 extern "C" {
     pub fn spot_init(
@@ -61,5 +62,31 @@ extern "C" {
     pub fn spot_quantile(spot: *const SpotRaw, q: c_double) -> c_double;
     pub fn libspot_version(buffer: *mut c_char, size: c_ulong);
     // pub fn libspot_error(err: c_int, buffer: *mut c_char, size: c_ulong);
+    pub fn set_allocators(m: MallocFn, f: FreeFn);
+}
+
+// For WASM targets, declare functions as weak symbols
+#[cfg(target_arch = "wasm32")]
+extern "C" {
+    #[link_name = "spot_init"]
+    pub fn spot_init(
+        spot: *mut SpotRaw,
+        q: c_double,
+        low: c_int,
+        discard_anomalies: c_int,
+        level: c_double,
+        max_excess: c_ulong,
+    ) -> c_int;
+    #[link_name = "spot_free"]
+    pub fn spot_free(spot: *mut SpotRaw);
+    #[link_name = "spot_fit"]
+    pub fn spot_fit(spot: *mut SpotRaw, data: *const c_double, size: c_ulong) -> c_int;
+    #[link_name = "spot_step"]
+    pub fn spot_step(spot: *mut SpotRaw, x: c_double) -> c_int;
+    #[link_name = "spot_quantile"]
+    pub fn spot_quantile(spot: *const SpotRaw, q: c_double) -> c_double;
+    #[link_name = "libspot_version"]
+    pub fn libspot_version(buffer: *mut c_char, size: c_ulong);
+    #[link_name = "set_allocators"]
     pub fn set_allocators(m: MallocFn, f: FreeFn);
 }

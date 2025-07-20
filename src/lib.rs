@@ -3,6 +3,7 @@
 use std::os::raw::{c_char, c_ulong};
 
 // Module declarations
+mod allocator;
 mod config;
 mod detector;
 mod error;

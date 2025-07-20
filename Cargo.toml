@@ -28,5 +28,9 @@ include = [
 [dependencies]
 libc = "0.2"
 
+# WASM-compatible allocator
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wee_alloc = "0.4"
+
 [dev-dependencies]
 approx = "0.5.1"

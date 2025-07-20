@@ -1,6 +1,7 @@
 use std::mem::MaybeUninit;
 use std::os::raw::c_ulong;
 
+use crate::allocator::{cross_platform_free, cross_platform_malloc, usize_to_c_ulong};
 use crate::config::SpotConfig;
 use crate::error::{SpotError, SpotResult};
 use crate::ffi::{self, SpotRaw};
@@ -16,9 +17,9 @@ pub struct SpotDetector {
 impl SpotDetector {
     /// Create a new SPOT detector with the given configuration
     pub fn new(config: SpotConfig) -> SpotResult<Self> {
-        // Initialize allocators
+        // Initialize allocators with cross-platform functions
         unsafe {
-            ffi::set_allocators(libc::malloc, libc::free);
+            ffi::set_allocators(cross_platform_malloc, cross_platform_free);
         }
 
         let mut detector = SpotDetector {
@@ -33,7 +34,7 @@ impl SpotDetector {
                 if config.low_tail { 1 } else { 0 },
                 if config.discard_anomalies { 1 } else { 0 },
                 config.level,
-                config.max_excess,
+                config.max_excess as c_ulong,
             );
 
             if status < 0 {
@@ -52,7 +53,11 @@ impl SpotDetector {
         }
 
         unsafe {
-            let status = ffi::spot_fit(self.raw.as_mut_ptr(), data.as_ptr(), data.len() as c_ulong);
+            let status = ffi::spot_fit(
+                self.raw.as_mut_ptr(),
+                data.as_ptr(),
+                usize_to_c_ulong(data.len()),
+            );
 
             if status < 0 {
                 return Err(SpotError::from_code(status));
