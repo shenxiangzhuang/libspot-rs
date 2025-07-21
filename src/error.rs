@@ -1,5 +1,6 @@
 use std::fmt;
 use std::os::raw::{c_char, c_int, c_ulong};
+use crate::ffi;
 
 /// Result type for SPOT operations
 pub type SpotResult<T> = Result<T, SpotError>;
@@ -59,9 +60,11 @@ impl SpotError {
             return "Detector not initialized".to_string();
         }
 
-        unsafe {
+        // Use the FFI module to get the error message
+        #[cfg(not(target_arch = "wasm32"))]
+        let result = unsafe {
             let mut buffer = vec![0u8; 256];
-            libspot_error(
+            ffi::libspot_error(
                 self.code(),
                 buffer.as_mut_ptr() as *mut c_char,
                 buffer.len() as c_ulong,
@@ -69,7 +72,23 @@ impl SpotError {
             String::from_utf8_lossy(&buffer)
                 .trim_end_matches('\0')
                 .to_string()
-        }
+        };
+        
+        // For WASM, the function is already safe
+        #[cfg(target_arch = "wasm32")]
+        let result = {
+            let mut buffer = vec![0u8; 256];
+            ffi::libspot_error(
+                self.code(),
+                buffer.as_mut_ptr() as *mut c_char,
+                buffer.len() as c_ulong,
+            );
+            String::from_utf8_lossy(&buffer)
+                .trim_end_matches('\0')
+                .to_string()
+        };
+        
+        result
     }
 }
 
@@ -96,11 +115,6 @@ impl fmt::Display for SpotError {
 }
 
 impl std::error::Error for SpotError {}
-
-// FFI declaration needed for the message() method
-extern "C" {
-    fn libspot_error(err: c_int, buffer: *mut c_char, size: c_ulong);
-}
 
 #[cfg(test)]
 mod tests {

@@ -61,6 +61,7 @@ extern "C" {
     pub fn spot_step(spot: *mut SpotRaw, x: c_double) -> c_int;
     pub fn spot_quantile(spot: *const SpotRaw, q: c_double) -> c_double;
     pub fn libspot_version(buffer: *mut c_char, size: c_ulong);
+    pub fn libspot_error(err: c_int, buffer: *mut c_char, size: c_ulong);
     pub fn set_allocators(m: MallocFn, f: FreeFn);
 }
 

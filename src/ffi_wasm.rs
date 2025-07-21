@@ -1,4 +1,8 @@
-use std::os::raw::{c_char, c_double, c_int, c_ulong};
+use std::os::raw::{c_char, c_double, c_int, c_ulong, c_void};
+
+// Function pointer types for WASM compatibility
+pub type MallocFn = unsafe extern "C" fn(size: usize) -> *mut c_void;
+pub type FreeFn = unsafe extern "C" fn(ptr: *mut c_void);
 
 // Internal C structures (kept private to this module)
 #[repr(C)]
@@ -81,6 +85,27 @@ pub fn libspot_version(buffer: *mut c_char, size: c_ulong) {
     unsafe {
         let len = std::cmp::min(version.len(), size as usize);
         std::ptr::copy_nonoverlapping(version.as_ptr(), buffer as *mut u8, len);
+    }
+}
+
+pub fn libspot_error(err: c_int, buffer: *mut c_char, size: c_ulong) {
+    // Simplified implementation for WASM
+    let error_msg = match err {
+        -1000 => "Memory allocation failed",
+        -1001 => "The level parameter is out of bounds (it must be between 0 and 1, but close to 1)",
+        -1002 => "The q parameter must between 0 and 1-level",
+        -1003 => "The excess threshold has not been initialized",
+        -1004 => "The anomaly threshold has not been initialized",
+        -1005 => "The input data is NaN",
+        _ => "Unknown error",
+    };
+    
+    // Convert to bytes and add null terminator
+    let error_bytes = format!("{}\0", error_msg).into_bytes();
+    
+    unsafe {
+        let len = std::cmp::min(error_bytes.len(), size as usize);
+        std::ptr::copy_nonoverlapping(error_bytes.as_ptr(), buffer as *mut u8, len);
     }
 }
 
