@@ -36,9 +36,6 @@ fn main() {
     // Link against the static libspot library
     println!("cargo:rustc-link-lib=static=spot");
 
-    // Link against the math library (required by libspot)
-    println!("cargo:rustc-link-lib=m");
-
     // Rerun build script if libspot source files change
     println!("cargo:rerun-if-changed=libspot/");
 }

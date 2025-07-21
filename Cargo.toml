@@ -27,6 +27,7 @@ include = [
 
 [dependencies]
 libc = "0.2"
+libm = "0.2"
 
 [dev-dependencies]
 approx = "0.5.1"
