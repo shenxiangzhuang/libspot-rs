@@ -128,7 +128,7 @@ impl SpotDetector {
                 low_tail: spot_ref.low != 0,
                 discard_anomalies: spot_ref.discard_anomalies != 0,
                 level: spot_ref.level,
-                max_excess: spot_ref.tail.peaks.container.capacity,
+                max_excess: spot_ref.tail.peaks.container.capacity as u64,
             })
         }
     }

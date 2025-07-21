@@ -27,7 +27,7 @@ fn main() {
                 }
             }
             Err(e) => {
-                println!("cargo:warning=emscripten not available: {}", e);
+                println!("cargo:warning=emscripten not available: {e}");
                 println!(
                     "cargo:warning=Continuing without C library - FFI calls will fail at runtime"
                 );
