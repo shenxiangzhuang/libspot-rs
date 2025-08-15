@@ -1,5 +1,3 @@
-//! Short debug test to compare inputs between Rust and FFI
-
 use libspot::{Spot, SpotConfig, SpotStatus};
 
 extern "C" {
@@ -12,37 +10,32 @@ fn c_rand() -> f64 {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== PURE RUST SHORT DEBUG ===");
-    println!("Starting debug...");
+    println!("=== PURE RUST INPUT DEBUG ===");
     
     // Use same seed as C implementation
     unsafe { srand(42) };
-    println!("Seed set to 42");
     
     let config = SpotConfig::default();
     let mut detector = Spot::new(config)?;
-    println!("Detector created");
     
     // Generate and collect training data
     let mut training_data = Vec::with_capacity(20000);
     for _ in 0..20000 {
         training_data.push(c_rand());
     }
-    println!("Training data generated: {} points", training_data.len());
     
     // Fit the model
     detector.fit(&training_data)?;
     println!("Model fitted. Initial threshold T = {}", detector.excess_threshold());
     
-    // Test for just 100k steps
-    let target_steps = [50000, 100000];
+    // Process samples and capture Grimshaw inputs when they're called
+    let target_steps = [100000, 500000, 1000000, 5000000, 10000000];
     let mut step_count = 0;
     let mut anomaly_count = 0;
     let mut excess_count = 0;
     let mut normal_count = 0;
     
-    println!("Processing 100k samples...");
-    for _ in 0..100000 {
+    for _ in 0..50000000 {
         let value = c_rand();
         let status = detector.step(value)?;
         step_count += 1;
@@ -50,11 +43,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match status {
             SpotStatus::Anomaly => {
                 anomaly_count += 1;
-                if step_count <= 1000 { print!("!"); }
+                print!("!");
             },
             SpotStatus::Excess => {
                 excess_count += 1;
-                if step_count <= 1000 { print!("."); }
+                print!(".");
             },
             SpotStatus::Normal => {
                 normal_count += 1;
@@ -90,6 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("Excess statistics - Mean: {:.6}, Variance: {:.6}, Sum: {:.6}", 
                         mean, variance, sum);
             }
+            print!("Continuing... ");
         }
     }
     

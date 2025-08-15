@@ -1,6 +1,4 @@
-//! Short debug test to compare inputs between Rust and FFI
-
-use libspot::{Spot, SpotConfig, SpotStatus};
+use libspot_ffi::{SpotDetector, SpotConfig, SpotStatus};
 
 extern "C" {
     fn srand(seed: u32);
@@ -12,23 +10,19 @@ fn c_rand() -> f64 {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== PURE RUST SHORT DEBUG ===");
-    println!("Starting debug...");
+    println!("=== FFI SHORT DEBUG ===");
     
     // Use same seed as C implementation
     unsafe { srand(42) };
-    println!("Seed set to 42");
     
     let config = SpotConfig::default();
-    let mut detector = Spot::new(config)?;
-    println!("Detector created");
+    let mut detector = SpotDetector::new(config)?;
     
     // Generate and collect training data
     let mut training_data = Vec::with_capacity(20000);
     for _ in 0..20000 {
         training_data.push(c_rand());
     }
-    println!("Training data generated: {} points", training_data.len());
     
     // Fit the model
     detector.fit(&training_data)?;
@@ -41,7 +35,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut excess_count = 0;
     let mut normal_count = 0;
     
-    println!("Processing 100k samples...");
     for _ in 0..100000 {
         let value = c_rand();
         let status = detector.step(value)?;

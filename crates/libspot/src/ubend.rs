@@ -119,6 +119,11 @@ impl Ubend {
     pub fn last_erased_data(&self) -> f64 {
         self.last_erased_data
     }
+
+    /// Get all data in insertion order as a vector
+    pub fn data(&self) -> Vec<f64> {
+        self.iter().collect()
+    }
 }
 
 /// Iterator over Ubend data in insertion order

@@ -213,6 +213,24 @@ impl Spot {
     pub fn peaks_variance(&self) -> f64 {
         self.tail.peaks().variance()
     }
+
+    /// Get current excess values for debugging
+    pub fn get_excess_values(&self) -> Vec<f64> {
+        self.tail.peaks().container().data()
+    }
+
+    /// Get statistics for debugging
+    pub fn get_statistics(&self) -> (u64, u64, u64) {
+        let anomaly_count = 0u64; // We don't track this in the current implementation
+        let excess_count = self.nt as u64;
+        let normal_count = (self.n - self.nt) as u64;
+        (anomaly_count, excess_count, normal_count)
+    }
+
+    /// Get GPD parameters for debugging  
+    pub fn get_gpd_parameters(&self) -> (f64, f64) {
+        (self.tail.gamma(), self.tail.sigma())
+    }
 }
 
 #[cfg(test)]

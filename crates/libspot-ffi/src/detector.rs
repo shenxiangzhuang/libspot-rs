@@ -127,6 +127,64 @@ impl SpotDetector {
             })
         }
     }
+
+    /// Get current excess values for debugging (access to internal C structure)
+    pub fn get_excess_values(&self) -> Vec<f64> {
+        if !self.initialized {
+            return Vec::new();
+        }
+
+        unsafe {
+            let spot_ref = &*self.raw.as_ptr();
+            let container = &spot_ref.tail.peaks.container;
+            
+            if container.data.is_null() || container.capacity == 0 {
+                return Vec::new();
+            }
+            
+            let data_slice = std::slice::from_raw_parts(container.data, container.capacity as usize);
+            
+            if container.filled == 0 {
+                // Buffer not full, only use elements up to cursor
+                data_slice[..container.cursor as usize].to_vec()
+            } else {
+                // Buffer is full, elements are in circular order
+                let mut result = Vec::with_capacity(container.capacity as usize);
+                for i in 0..container.capacity {
+                    let idx = (container.cursor + i) % container.capacity;
+                    result.push(data_slice[idx as usize]);
+                }
+                result
+            }
+        }
+    }
+
+    /// Get statistics for debugging
+    pub fn get_statistics(&self) -> (u64, u64, u64) {
+        if !self.initialized {
+            return (0, 0, 0);
+        }
+
+        unsafe {
+            let spot_ref = &*self.raw.as_ptr();
+            let total_count = spot_ref.n;
+            let excess_count = spot_ref.nt;
+            let normal_count = total_count - excess_count;
+            (0, excess_count, normal_count) // anomaly count not directly available from C struct
+        }
+    }
+
+    /// Get GPD parameters for debugging
+    pub fn get_gpd_parameters(&self) -> (f64, f64) {
+        if !self.initialized {
+            return (f64::NAN, f64::NAN);
+        }
+
+        unsafe {
+            let spot_ref = &*self.raw.as_ptr();
+            (spot_ref.tail.gamma, spot_ref.tail.sigma)
+        }
+    }
 }
 
 impl Drop for SpotDetector {
