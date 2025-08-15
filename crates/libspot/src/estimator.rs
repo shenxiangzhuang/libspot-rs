@@ -71,7 +71,7 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
         grimshaw_simplified_log_likelihood(roots[0], peaks);
     let mut best_root_index = 0;
     
-    // Check other roots
+    // Check other roots (exact same logic as C implementation)
     for k in 1..3 {
         if found[k] {
             let (tmp_gamma, tmp_sigma, llhood) = 
@@ -87,8 +87,11 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
     
     // Debug logging for final selection
     if std::env::var("SPOT_DEBUG_GRIMSHAW").is_ok() {
+        // Only log when there's a change or at key intervals
         println!("Grimshaw selected: root_index={}, gamma={:.15}, sigma={:.15}, llhood={:.15}",
                  best_root_index, best_gamma, best_sigma, max_llhood);
+    } else if std::env::var("SPOT_DEBUG_FINAL").is_ok() {
+        println!("Final Grimshaw: gamma={:.15}, sigma={:.15}", best_gamma, best_sigma);
     }
     
     (best_gamma, best_sigma, max_llhood)
