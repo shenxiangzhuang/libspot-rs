@@ -3,7 +3,7 @@
 //! This example shows how to use the pure Rust SPOT implementation
 //! for time series anomaly detection.
 
-use spot_rs::{Spot, SpotConfig, SpotStatus};
+use libspot::{Spot, SpotConfig, SpotStatus};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SPOT Anomaly Detection - Pure Rust Implementation");

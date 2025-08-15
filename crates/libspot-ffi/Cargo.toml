@@ -1,0 +1,30 @@
+[package]
+name = "libspot-ffi"
+version = "2.0.0-beta.3.0"
+edition = "2021"
+authors = ["Mathew Shen <datahonor@gmail.com>"]
+documentation = "https://docs.rs/crate/libspot-ffi"
+repository = "https://github.com/shenxiangzhuang/libspot-rs"
+readme = "README.md"
+license = "LGPL-3.0"
+description = "Rust FFI bindings for libspot, a fast time series anomaly detector"
+keywords = ["Spot", "TimeSeries", "AnomalyDetection", "FFI"]
+
+# Include style (current) - Note: may include extra files due to git submodule behavior
+include = [
+    "src/**/*",
+    "build.rs",
+    "libspot/Makefile",
+    "libspot/LICENSE.md",
+    "libspot/README.md",
+    "libspot/src/**/*.c",
+    "libspot/include/**/*.h",
+    "./README.md",
+]
+
+[dependencies]
+libc = "0.2"
+libspot = { path = "../.." }
+
+[dev-dependencies]
+approx = "0.5.1"

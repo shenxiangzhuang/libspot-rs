@@ -25,11 +25,18 @@ checksum = "1171693293099992e19cddea4e8b849964e9846f4acee11b3948bcc337be8776"
 
 [[package]]
 name = "libspot"
+version = "0.1.0"
+dependencies = [
+ "approx",
+]
+
+[[package]]
+name = "libspot-ffi"
 version = "2.0.0-beta.3.0"
 dependencies = [
  "approx",
  "libc",
- "spot-rs",
+ "libspot",
 ]
 
 [[package]]
@@ -39,11 +46,4 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "spot-rs"
-version = "0.1.0"
-dependencies = [
- "approx",
 ]

@@ -1,4 +1,4 @@
-use spot_rs::{Spot, SpotConfig, SpotStatus};
+use libspot::{Spot, SpotConfig, SpotStatus};
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
 struct CRand {

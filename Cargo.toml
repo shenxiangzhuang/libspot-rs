@@ -1,36 +1,28 @@
 [package]
 name = "libspot"
-version = "2.0.0-beta.3.0"
+version = "0.1.0"
 edition = "2021"
 authors = ["Mathew Shen <datahonor@gmail.com>"]
 documentation = "https://docs.rs/crate/libspot"
 repository = "https://github.com/shenxiangzhuang/libspot-rs"
 readme = "README.md"
 license = "LGPL-3.0"
-description = "Rust bindings for libspot, a fast time series anomaly detector"
+description = "Pure Rust implementation of the SPOT algorithm for time series anomaly detection"
 keywords = ["Spot", "TimeSeries", "AnomalyDetection"]
 
-# Include style (current) - Note: may include extra files due to git submodule behavior
+# Include style for pure Rust implementation
 include = [
     "src/**/*",
     "examples/**/*",
     "tests/**/*",
-    "build.rs",
-    "libspot/Makefile",
-    "libspot/LICENSE.md",
-    "libspot/README.md",
-    "libspot/src/**/*.c",
-    "libspot/include/**/*.h",
     "./README.md",
     "./LICENSE",
 ]
 
 [dependencies]
-libc = "0.2"
-spot-rs = { path = "crates/spot-rs" }
 
 [dev-dependencies]
 approx = "0.5.1"
 
 [workspace]
-members = [".", "crates/spot-rs"]
+members = [".", "crates/libspot-ffi"]

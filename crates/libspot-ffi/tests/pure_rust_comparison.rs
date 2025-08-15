@@ -1,6 +1,6 @@
 use approx::assert_relative_eq;
-use libspot::{SpotConfig, SpotDetector, SpotStatus};
-use spot_rs::{Spot as PureSpot, SpotConfig as PureSpotConfig, SpotStatus as PureSpotStatus};
+use libspot_ffi::{SpotConfig, SpotDetector, SpotStatus};
+use libspot::{Spot as PureSpot, SpotConfig as PureSpotConfig, SpotStatus as PureSpotStatus};
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
 struct CRand {
