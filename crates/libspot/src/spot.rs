@@ -341,7 +341,7 @@ mod tests {
         let data: Vec<f64> = (0..100).map(|i| i as f64).collect();
         spot.fit(&data).unwrap();
         
-        let initial_nt = spot.nt();
+        let _initial_nt = spot.nt();
         
         // Add a value that should be an excess
         let result = spot.step(95.0);

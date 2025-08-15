@@ -15,13 +15,14 @@ This crate provides Rust bindings to the original C implementation of libspot. I
 
 ## Usage
 
-```rust
+```rust,ignore
 use libspot_ffi::{SpotDetector, SpotConfig, SpotStatus};
 
 let config = SpotConfig::default();
 let mut detector = SpotDetector::new(config)?;
-
+// training_data would be your Vec<f64> of training data
 detector.fit(&training_data)?;
+// value would be your new data point
 match detector.step(value)? {
     SpotStatus::Normal => println!("Normal"),
     SpotStatus::Excess => println!("In tail"),

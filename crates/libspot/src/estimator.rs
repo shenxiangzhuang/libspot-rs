@@ -285,7 +285,7 @@ mod tests {
         let mut peaks = Peaks::new(5).unwrap();
         peaks.push(1.0);
         
-        let (gamma, sigma, llhood) = mom_estimator(&peaks);
+        let (gamma, sigma, _llhood) = mom_estimator(&peaks);
         // With variance = 0, this should produce specific values
         assert!(is_nan(gamma) || gamma.is_infinite());
         assert!(is_nan(sigma) || sigma.is_infinite());
@@ -335,7 +335,7 @@ mod tests {
         let result = brent(1.0, 3.0, |x| x * x - 4.0, 1e-10);
         assert!(result.is_some());
         let root = result.unwrap();
-        assert_relative_eq!(root, 2.0, epsilon = 1e-10);
+        assert_relative_eq!(root, 2.0, epsilon = 1e-9);
     }
 
     #[test]

@@ -1,5 +1,5 @@
 use approx::assert_relative_eq;
-use libspot::{SpotConfig, SpotDetector, SpotError, SpotStatus};
+use libspot_ffi::{SpotConfig, SpotDetector, SpotError, SpotStatus};
 
 /// Test basic SPOT detector initialization - validates that our binding correctly initializes the C library
 #[test]
@@ -197,7 +197,7 @@ fn test_config_retrieval() {
 /// Test version function
 #[test]
 fn test_version_function() {
-    let version = libspot::version();
+    let version = libspot_ffi::version();
     assert!(!version.is_empty(), "Version should not be empty");
     println!("Library version: {version}");
 }

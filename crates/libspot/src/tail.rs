@@ -120,7 +120,6 @@ impl Tail {
 mod tests {
     use super::*;
     use crate::error::SpotError;
-    use approx::assert_relative_eq;
 
     #[test]
     fn test_tail_creation() {

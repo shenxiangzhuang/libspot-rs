@@ -32,7 +32,7 @@ dependencies = [
 
 [[package]]
 name = "libspot-ffi"
-version = "2.0.0-beta.3.0"
+version = "2.0.0-beta.4.0"
 dependencies = [
  "approx",
  "libc",

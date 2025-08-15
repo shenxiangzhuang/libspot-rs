@@ -25,7 +25,7 @@ fn main() {
 
     // Copy built library to OUT_DIR
     fs::copy(
-        build_dir.join("dist/libspot.a.2.0b3"),
+        build_dir.join("dist/libspot.a.2.0b4"),
         Path::new(&out_dir).join("libspot.a"),
     )
     .expect("Failed to copy library");

@@ -46,3 +46,4 @@ pub use status::SpotStatus;
 pub use ubend::Ubend;
 pub use peaks::Peaks;
 pub use tail::Tail;
+pub use p2::p2_quantile;

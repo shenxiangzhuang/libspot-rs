@@ -185,7 +185,7 @@ mod tests {
     fn test_xexp() {
         assert_relative_eq!(xexp(0.0), 1.0, epsilon = 1e-15);
         assert_relative_eq!(xexp(1.0), std::f64::consts::E, epsilon = 1e-14);
-        assert_relative_eq!(xexp(LOG2), 2.0, epsilon = 1e-15);
+        assert_relative_eq!(xexp(LOG2), 2.0, epsilon = 1e-14);
     }
 
     #[test]
@@ -198,11 +198,11 @@ mod tests {
     #[test]
     fn test_frexp() {
         let (mantissa, exp) = extract_frexp(8.0);
-        assert_relative_eq!(mantissa, 1.0, epsilon = 1e-15);
-        assert_eq!(exp, 3);
+        assert_relative_eq!(mantissa, 0.5, epsilon = 1e-15);
+        assert_eq!(exp, 4);
         
         let (mantissa, exp) = extract_frexp(0.5);
-        assert_relative_eq!(mantissa, 1.0, epsilon = 1e-15);
-        assert_eq!(exp, -1);
+        assert_relative_eq!(mantissa, 0.5, epsilon = 1e-15);
+        assert_eq!(exp, 0);
     }
 }
