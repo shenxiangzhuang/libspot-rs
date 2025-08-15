@@ -71,7 +71,9 @@ impl Tail {
             return f64::NAN;
         }
 
-        if self.gamma == 0.0 {
+        // Use tolerance for gamma comparison to handle numerical precision
+        const GAMMA_TOLERANCE: f64 = 1e-8;
+        if self.gamma.abs() < GAMMA_TOLERANCE {
             s * xexp(-d / self.sigma)
         } else {
             let r = d * (self.gamma / self.sigma);
@@ -88,7 +90,9 @@ impl Tail {
         }
 
         let r = q / s;
-        if self.gamma == 0.0 {
+        // Use tolerance for gamma comparison to handle numerical precision
+        const GAMMA_TOLERANCE: f64 = 1e-8;
+        if self.gamma.abs() < GAMMA_TOLERANCE {
             -self.sigma * xlog(r)
         } else {
             (self.sigma / self.gamma) * (xpow(r, -self.gamma) - 1.0)
