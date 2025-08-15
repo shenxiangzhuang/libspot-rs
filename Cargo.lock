@@ -28,6 +28,7 @@ name = "libspot"
 version = "0.1.0"
 dependencies = [
  "approx",
+ "libc",
 ]
 
 [[package]]

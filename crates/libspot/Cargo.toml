@@ -23,3 +23,4 @@ include = [
 
 [dev-dependencies]
 approx = "0.5.1"
+libc = "0.2"

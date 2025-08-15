@@ -1,0 +1,24 @@
+{
+  "name": "libspot",
+  "version": "2.0.0-beta.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asiffer/libspot.git",
+    "directory": "wasm"
+  },
+  "type": "module",
+  "main": "./dist/libspot.js",
+  "module": "./dist/libspot.js",
+  "types": "./types/index.d.ts",
+  "files": [
+    "./dist/libspot.js",
+    "./types/index.d.ts"
+  ],
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "^3.6.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,100 @@
+name: Python
+
+on:
+  workflow_dispatch:
+
+jobs:
+  gen_api:
+    name: Generate public api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Define spot.h
+        run: make api
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api
+          path: dist/spot.h
+          if-no-files-found: error
+
+  build_wheels:
+    needs: gen_api
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: api
+          path: dist/
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install some build dependencies
+        run: |
+          uv sync --all-extras
+          uv pip install abi3audit
+        working-directory: ./python
+
+      - name: Build wheel
+        run: uv run python -m build --wheel --installer uv
+        working-directory: ./python
+
+      - if: runner.os == 'Linux'
+        name: Repair wheel (linux)
+        run: uv run auditwheel repair -w wheel --strip dist/*.whl
+        working-directory: ./python
+
+      - if: runner.os == 'Linux'
+        name: Check abi3 (Linux)
+        run: uv run abi3audit --strict --report wheel/*.whl
+        working-directory: ./python
+      # check on windows if these two steps are ok
+      - if: runner.os == 'Windows'
+        name: Repair wheel (windows)
+        run: uv run delvewheel repair -w wheel --strip dist/$((dir dist|Select-Object -First 1).Name)
+        working-directory: ./python
+
+      - if: runner.os == 'Windows'
+        name: Check abi3 (Windows)
+        run: uv run abi3audit --strict --report dist/$((dir wheel|Select-Object -First 1).Name)
+        working-directory: ./python
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./python/wheel/*.whl
+          name: libspot-python-${{ matrix.os }}
+
+  upload:
+    name: Upload wheels to PyPI
+    needs:
+      - build_wheels
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'master'
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: libspot-python-*
+          path: dist
+          merge-multiple: true
+      - name: debug
+        run: |
+          ls -alh --color=auto .
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

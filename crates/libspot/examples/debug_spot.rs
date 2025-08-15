@@ -1,58 +1,112 @@
-use libspot::{p2_quantile, Spot, SpotConfig};
+use libspot::{Spot, SpotConfig, SpotStatus};
+
+/// Random number generator that matches C's rand()/srand() for reproducible results
+pub struct CRand;
+
+impl CRand {
+    pub fn new(seed: u32) -> Self {
+        unsafe {
+            libc::srand(seed);
+        }
+        CRand
+    }
+
+    pub fn rand(&mut self) -> u32 {
+        unsafe { libc::rand() as u32 }
+    }
+
+    pub fn runif(&mut self) -> f64 {
+        self.rand() as f64 / 2147483647.0
+    }
+
+    pub fn rexp(&mut self) -> f64 {
+        -self.runif().ln()
+    }
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Generate exponential random data like in the example
-    let mut rng_state = 1u32;
-    let mut generate_exp = || {
-        rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
-        let uniform = (rng_state / 65536) % 32768;
-        let uniform_float = uniform as f64 / 32767.0;
-        -uniform_float.ln()
+    println!("Debugging Pure Rust SPOT Implementation");
+
+    let config = SpotConfig {
+        q: 0.0001,
+        low_tail: false,
+        discard_anomalies: true,
+        level: 0.998,
+        max_excess: 200,
     };
+
+    let mut detector = Spot::new(config)?;
+    let mut rng = CRand::new(1);
+
+    // Generate training data
+    let n = 20000;
+    let mut initial_data = Vec::with_capacity(n);
+    for _ in 0..n {
+        initial_data.push(rng.rexp());
+    }
+
+    detector.fit(&initial_data)?;
+    println!("Initial thresholds after fit:");
+    println!("  Excess threshold: {:.15}", detector.excess_threshold());
+    println!("  Anomaly threshold: {:.15}", detector.anomaly_threshold());
+
+    // Test with smaller number to debug differences
+    let test_samples = 1000;
+    let mut normal = 0;
+    let mut excess = 0;
+    let mut anomaly = 0;
     
-    let data: Vec<f64> = (0..20000).map(|_| generate_exp()).collect();
+    println!("\nProcessing {} test samples...", test_samples);
     
-    println!("Data length: {}", data.len());
-    println!("Data range: {} to {}", data.iter().fold(f64::INFINITY, |a, &b| a.min(b)), data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)));
-    
-    // Try direct P2 quantile calculation
-    let quantile = p2_quantile(0.998, &data);
-    println!("Direct P2 quantile (0.998): {}", quantile);
-    
-    if quantile.is_nan() {
-        println!("Quantile is NaN - let's debug");
+    for i in 0..test_samples {
+        let val = rng.rexp();
+        let status = detector.step(val)?;
         
-        // Try with smaller level
-        let smaller_quantile = p2_quantile(0.95, &data);
-        println!("P2 quantile (0.95): {}", smaller_quantile);
+        match status {
+            SpotStatus::Normal => normal += 1,
+            SpotStatus::Excess => {
+                excess += 1;
+                if i < 10 {
+                    println!("Sample {}: EXCESS val={:.6} threshold={:.6}", i, val, detector.excess_threshold());
+                }
+            },
+            SpotStatus::Anomaly => {
+                anomaly += 1;
+                if i < 10 {
+                    println!("Sample {}: ANOMALY val={:.6} threshold={:.6}", i, val, detector.anomaly_threshold());
+                }
+            },
+        }
         
-        // Try with very small data
-        let small_data: Vec<f64> = data[0..10].to_vec();
-        let small_quantile = p2_quantile(0.998, &small_data);
-        println!("P2 quantile on {} elements: {}", small_data.len(), small_quantile);
-    } else {
-        let config = SpotConfig {
-            q: 0.0001,
-            low_tail: false,
-            discard_anomalies: true,
-            level: 0.998,
-            max_excess: 200,
-        };
-        
-        let mut detector = Spot::new(config)?;
-        println!("SPOT detector created");
-        
-        match detector.fit(&data) {
-            Ok(_) => {
-                println!("Fit successful!");
-                println!("Excess threshold: {}", detector.excess_threshold());
-                println!("Anomaly threshold: {}", detector.anomaly_threshold());
-            }
-            Err(e) => {
-                println!("Fit failed: {:?}", e);
-            }
+        if i < 10 || i % 100 == 0 {
+            println!("Sample {}: val={:.6} status={:?} Z={:.6} T={:.6}", 
+                     i, val, status, detector.anomaly_threshold(), detector.excess_threshold());
         }
     }
+
+    println!("\nResults after {} samples:", test_samples);
+    println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
+    println!("Z={:.15} T={:.15}", detector.anomaly_threshold(), detector.excess_threshold());
+    
+    // Compare with larger test
+    println!("\nRunning larger test (100k samples)...");
+    let larger_test = 100_000;
+    let mut normal_large = 0;
+    let mut excess_large = 0;
+    let mut anomaly_large = 0;
+    
+    for _ in 0..larger_test {
+        let val = rng.rexp();
+        match detector.step(val)? {
+            SpotStatus::Normal => normal_large += 1,
+            SpotStatus::Excess => excess_large += 1,
+            SpotStatus::Anomaly => anomaly_large += 1,
+        }
+    }
+    
+    println!("Results after {} additional samples:", larger_test);
+    println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly_large, excess_large, normal_large);
+    println!("Z={:.15} T={:.15}", detector.anomaly_threshold(), detector.excess_threshold());
     
     Ok(())
 }

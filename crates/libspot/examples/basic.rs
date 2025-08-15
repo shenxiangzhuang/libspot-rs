@@ -7,35 +7,31 @@ use libspot::{Spot, SpotConfig, SpotStatus};
 use std::time::Instant;
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
-pub struct CRand {
-    state: u32,
-}
+/// This uses the actual C library functions to ensure identical results
+pub struct CRand;
 
 impl CRand {
     /// Create a new random number generator with the given seed
     pub fn new(seed: u32) -> Self {
-        CRand { state: seed }
+        unsafe {
+            libc::srand(seed);
+        }
+        CRand
     }
 
-    /// Generate a random integer using linear congruential generator (LCG)
-    /// This matches the behavior of C's rand()/srand() for reproducible results
+    /// Generate a random integer
     pub fn rand(&mut self) -> u32 {
-        // LCG parameters used by many C standard libraries
-        self.state = self.state.wrapping_mul(1103515245).wrapping_add(12345);
-        (self.state / 65536) % 32768 // Return value in range [0, 32767]
+        unsafe { libc::rand() as u32 }
     }
 
     /// Generate a uniform random float in [0, 1)
     pub fn runif(&mut self) -> f64 {
-        self.rand() as f64 / 32768.0 // Make sure we don't get exactly 0 or 1
+        self.rand() as f64 / 2147483647.0 // RAND_MAX = 2^31 - 1
     }
 
     /// Generate an exponentially distributed random variable with rate 1
     pub fn rexp(&mut self) -> f64 {
-        let u = self.runif();
-        // Ensure u is never 0 to avoid ln(0) = -inf
-        let safe_u = if u <= f64::EPSILON { f64::EPSILON } else { u };
-        -safe_u.ln()
+        -self.runif().ln()
     }
 }
 
