@@ -27,6 +27,10 @@ include = [
 
 [dependencies]
 libc = "0.2"
+spot-rs = { path = "crates/spot-rs" }
 
 [dev-dependencies]
 approx = "0.5.1"
+
+[workspace]
+members = [".", "crates/spot-rs"]

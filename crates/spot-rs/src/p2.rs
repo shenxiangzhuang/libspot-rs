@@ -69,10 +69,12 @@ impl P2 {
             } else {
                 // Find position where q[k] < xj <= q[k+1]
                 let mut k = 0;
-                while xj > self.q[k] {
+                while k < 4 && xj > self.q[k] {
                     k += 1;
                 }
-                k -= 1;
+                if k > 0 {
+                    k -= 1;
+                }
 
                 // Update marker positions for markers k+1 through 4
                 for i in (k + 1)..5 {
