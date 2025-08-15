@@ -60,9 +60,16 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
         found[2] = true;
     }
     
+    // Debug logging for root finding results
+    if std::env::var("SPOT_DEBUG_GRIMSHAW").is_ok() {
+        println!("Grimshaw roots: found=[{}, {}, {}], roots=[{:.15}, {:.15}, {:.15}]", 
+                 found[0], found[1], found[2], roots[0], roots[1], roots[2]);
+    }
+    
     // Compare all roots - start with zero
     let (mut best_gamma, mut best_sigma, mut max_llhood) = 
         grimshaw_simplified_log_likelihood(roots[0], peaks);
+    let mut best_root_index = 0;
     
     // Check other roots
     for k in 1..3 {
@@ -73,8 +80,15 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
                 max_llhood = llhood;
                 best_gamma = tmp_gamma;
                 best_sigma = tmp_sigma;
+                best_root_index = k;
             }
         }
+    }
+    
+    // Debug logging for final selection
+    if std::env::var("SPOT_DEBUG_GRIMSHAW").is_ok() {
+        println!("Grimshaw selected: root_index={}, gamma={:.15}, sigma={:.15}, llhood={:.15}",
+                 best_root_index, best_gamma, best_sigma, max_llhood);
     }
     
     (best_gamma, best_sigma, max_llhood)
@@ -167,6 +181,7 @@ fn grimshaw_simplified_log_likelihood(x_star: f64, peaks: &Peaks) -> (f64, f64, 
 
 /// Brent's method for root finding
 /// Returns Some(root) if found, None otherwise
+/// This implementation matches the C libspot brent.c exactly
 fn brent<F>(x1: f64, x2: f64, func: F, tol: f64) -> Option<f64>
 where
     F: Fn(f64) -> f64,
@@ -176,29 +191,28 @@ where
     let mut c = x2;
     let mut d = 0.0;
     let mut e = 0.0;
-    
+
     let mut fa = func(a);
     let mut fb = func(b);
-    
+
     if is_nan(fa) || is_nan(fb) {
         return None;
     }
-    
+
     // Check that root is bracketed
     if (fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0) {
         return None;
     }
-    
+
     let mut fc = fb;
     
     for _iter in 0..BRENT_ITMAX {
         if (fb > 0.0 && fc > 0.0) || (fb < 0.0 && fc < 0.0) {
             c = a; // Rename a, b, c and adjust bounding interval
             fc = fa;
-            e = b - a;
+            e = b - a; // Match C: e = d = b - a
             d = e;
         }
-        
         if fc.abs() < fb.abs() {
             a = b;
             b = c;
@@ -207,16 +221,13 @@ where
             fb = fc;
             fc = fa;
         }
-        
-        let tol1 = 2.0 * BRENT_DEFAULT_EPSILON * b.abs() + 0.5 * tol;
+        let tol1 = 2.0 * BRENT_DEFAULT_EPSILON * b.abs() + 0.5 * tol; // Convergence check.
         let xm = 0.5 * (c - b);
-        
         if xm.abs() <= tol1 || fb == 0.0 {
             return Some(b);
         }
-        
         if e.abs() >= tol1 && fa.abs() > fb.abs() {
-            let s = fb / fa;
+            let s = fb / fa; // Attempt inverse quadratic interpolation.
             let (p, q) = if a == c {
                 let p = 2.0 * xm * s;
                 let q = 1.0 - s;
@@ -229,40 +240,40 @@ where
                 (p, q)
             };
             
-            let q = if p > 0.0 { -q } else { q };
-            let p = p.abs();
+            let (p, q) = if p > 0.0 {
+                (p.abs(), -q) // Check whether in bounds.
+            } else {
+                (p.abs(), q)
+            };
             
             let min1 = 3.0 * xm * q - (tol1 * q).abs();
             let min2 = (e * q).abs();
-            
-            if 2.0 * p < min1.min(min2) {
-                e = d;
+            if 2.0 * p < if min1 < min2 { min1 } else { min2 } {
+                e = d; // Accept interpolation.
                 d = p / q;
             } else {
-                d = xm;
+                d = xm; // Interpolation failed, use bisection.
                 e = d;
             }
-        } else {
+        } else { // Bounds decreasing too slowly, use bisection.
             d = xm;
             e = d;
         }
-        
-        a = b;
+        a = b; // Move last best guess to a.
         fa = fb;
-        
         if d.abs() > tol1 {
+            // Evaluate new trial root.
             b += d;
         } else {
             b += if xm >= 0.0 { tol1.abs() } else { -tol1.abs() };
         }
-        
         fb = func(b);
         if is_nan(fb) {
             return None;
         }
     }
-    
-    None // Failed to converge
+    // Maximum number of iterations exceeded
+    None
 }
 
 #[cfg(test)]

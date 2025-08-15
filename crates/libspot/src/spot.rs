@@ -188,6 +188,31 @@ impl Spot {
     pub fn tail_parameters(&self) -> (f64, f64) {
         (self.tail.gamma(), self.tail.sigma())
     }
+
+    /// Get the current size of the tail data
+    pub fn tail_size(&self) -> usize {
+        self.tail.size()
+    }
+
+    /// Get the minimum value in the peaks
+    pub fn peaks_min(&self) -> f64 {
+        self.tail.peaks().min()
+    }
+
+    /// Get the maximum value in the peaks  
+    pub fn peaks_max(&self) -> f64 {
+        self.tail.peaks().max()
+    }
+
+    /// Get the mean of the peaks
+    pub fn peaks_mean(&self) -> f64 {
+        self.tail.peaks().mean()
+    }
+
+    /// Get the variance of the peaks
+    pub fn peaks_variance(&self) -> f64 {
+        self.tail.peaks().variance()
+    }
 }
 
 #[cfg(test)]

@@ -142,10 +142,8 @@ impl Peaks {
             // In peaks.c line 45: `peaks->e2 = value * value;` should be `peaks->e2 += value * value;`
             // We match this bug to ensure exact C compatibility as requested by the user.
             // This affects variance calculation which impacts MoM estimator and GPD parameter selection.
-            if i == max_iteration - 1 {
-                // Only the last value contributes to e2 (matches C bug)
-                self.e2 = value * value;
-            }
+            // The C code overwrites e2 on every iteration, so only the last value's square remains.
+            self.e2 = value * value;
             
             if is_nan(self.min) || (value < self.min) {
                 self.min = value;
