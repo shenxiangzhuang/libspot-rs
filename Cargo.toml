@@ -1,3 +1,7 @@
 [workspace]
 members = ["crates/libspot", "crates/libspot-ffi"]
 resolver = "2"
+
+[workspace.dependencies]
+libc = "0.2"
+approx = "0.5.1"
