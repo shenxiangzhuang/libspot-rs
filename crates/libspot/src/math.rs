@@ -3,8 +3,8 @@
 //! This module provides the core mathematical functions used by the SPOT algorithm,
 //! implemented in pure Rust to match the C behavior exactly.
 
-/// Constant for LOG(2)
-const LOG2: f64 = 0.693147180559945309417232121458176568;
+/// Constant for LOG(2) - exact same hex representation as C implementation
+const LOG2: f64 = f64::from_bits(0x3FE62E42FEFA39EF);
 
 /// Check if a double is NaN
 #[inline]

@@ -66,12 +66,12 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
                  found[0], found[1], found[2], roots[0], roots[1], roots[2]);
     }
     
-    // Compare all roots - start with zero
+    // Compare all roots (exact C implementation logic)
     let (mut best_gamma, mut best_sigma, mut max_llhood) = 
         grimshaw_simplified_log_likelihood(roots[0], peaks);
     let mut best_root_index = 0;
     
-    // Check other roots (exact same logic as C implementation)
+    // Check other roots
     for k in 1..3 {
         if found[k] {
             let (tmp_gamma, tmp_sigma, llhood) = 
