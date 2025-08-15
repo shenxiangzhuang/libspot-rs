@@ -42,24 +42,37 @@ impl Tail {
             return f64::NAN;
         }
 
-        // Try both estimators and keep the one with better log-likelihood
-        let (mom_gamma, mom_sigma, mom_llhood) = mom_estimator(&self.peaks);
-        let (grimshaw_gamma, grimshaw_sigma, grimshaw_llhood) = grimshaw_estimator(&self.peaks);
-
+        // Match C implementation exactly: try each estimator and pick best
         let mut max_llhood = f64::NAN;
-
-        // Start with MoM estimator
-        if !is_nan(mom_llhood) {
-            max_llhood = mom_llhood;
-            self.gamma = mom_gamma;
-            self.sigma = mom_sigma;
+        let mut tmp_gamma;
+        let mut tmp_sigma;
+        
+        // Try MoM estimator first (index 0 in C)
+        let llhood = {
+            let (gamma, sigma, llhood) = mom_estimator(&self.peaks);
+            tmp_gamma = gamma;
+            tmp_sigma = sigma;
+            llhood
+        };
+        
+        if is_nan(max_llhood) || llhood > max_llhood {
+            max_llhood = llhood;
+            self.gamma = tmp_gamma;
+            self.sigma = tmp_sigma;
         }
 
-        // Check if Grimshaw is better
-        if !is_nan(grimshaw_llhood) && (is_nan(max_llhood) || grimshaw_llhood > max_llhood) {
-            max_llhood = grimshaw_llhood;
-            self.gamma = grimshaw_gamma;
-            self.sigma = grimshaw_sigma;
+        // Try Grimshaw estimator (index 1 in C)
+        let llhood = {
+            let (gamma, sigma, llhood) = grimshaw_estimator(&self.peaks);
+            tmp_gamma = gamma;
+            tmp_sigma = sigma;
+            llhood
+        };
+        
+        if is_nan(max_llhood) || llhood > max_llhood {
+            max_llhood = llhood;
+            self.gamma = tmp_gamma;
+            self.sigma = tmp_sigma;
         }
 
         max_llhood
