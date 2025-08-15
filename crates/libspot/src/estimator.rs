@@ -240,11 +240,12 @@ where
                 (p, q)
             };
             
-            let (p, q) = if p > 0.0 {
-                (p.abs(), -q) // Check whether in bounds.
+            let q = if p > 0.0 {
+                -q // Check whether in bounds.
             } else {
-                (p.abs(), q)
+                q
             };
+            let p = p.abs();
             
             let min1 = 3.0 * xm * q - (tol1 * q).abs();
             let min2 = (e * q).abs();

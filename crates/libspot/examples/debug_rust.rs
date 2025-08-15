@@ -1,6 +1,6 @@
-//! Top-down debugging: FFI implementation (reference standard)
+//! Top-down debugging: Pure Rust implementation
 
-use libspot_ffi::{SpotConfig, SpotDetector, SpotStatus};
+use libspot::{Spot, SpotConfig, SpotStatus};
 
 pub struct CRand;
 
@@ -24,14 +24,14 @@ impl CRand {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== FFI IMPLEMENTATION (REFERENCE) ===");
+    println!("=== PURE RUST IMPLEMENTATION ===");
     
     let config = SpotConfig {
         q: 0.0001, low_tail: false, discard_anomalies: true,
         level: 0.998, max_excess: 200,
     };
 
-    let mut detector = SpotDetector::new(config)?;
+    let mut detector = Spot::new(config)?;
     let mut rng = CRand::new(1);
 
     // Training phase
@@ -93,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         cumulative_anomaly += anomaly;
     }
     
-    println!("\nFINAL FFI: ANOMALY={} EXCESS={} NORMAL={} Z={:.6} T={:.6}",
+    println!("\nFINAL RUST: ANOMALY={} EXCESS={} NORMAL={} Z={:.6} T={:.6}",
              cumulative_anomaly, cumulative_excess, cumulative_normal,
              detector.anomaly_threshold(), detector.excess_threshold());
     
