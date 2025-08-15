@@ -231,6 +231,38 @@ impl Spot {
     pub fn get_gpd_parameters(&self) -> (f64, f64) {
         (self.tail.gamma(), self.tail.sigma())
     }
+
+    /// Call the Grimshaw estimator directly with given excess values for debugging
+    pub fn call_grimshaw_estimator_with_data(&self, excess_values: &[f64]) -> (f64, f64, f64) {
+        use crate::peaks::Peaks;
+        use crate::estimator::grimshaw_estimator;
+        
+        // Create a temporary peaks structure with the given data
+        let mut temp_peaks = match Peaks::new(excess_values.len()) {
+            Ok(peaks) => peaks,
+            Err(_) => return (f64::NAN, f64::NAN, f64::NAN),
+        };
+        
+        // Add all values to the peaks
+        for &value in excess_values {
+            temp_peaks.push(value);
+        }
+        
+        // Call the Grimshaw estimator
+        grimshaw_estimator(&temp_peaks)
+    }
+
+    /// Get detailed peaks statistics for debugging
+    pub fn get_peaks_stats(&self) -> (f64, f64, f64, f64, usize) {
+        let peaks = self.tail.peaks();
+        (
+            peaks.mean(),
+            peaks.variance(), 
+            peaks.min(),
+            peaks.max(),
+            peaks.container().size()
+        )
+    }
 }
 
 #[cfg(test)]

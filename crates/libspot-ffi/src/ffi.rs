@@ -62,4 +62,7 @@ extern "C" {
     pub fn libspot_version(buffer: *mut c_char, size: c_ulong);
     // pub fn libspot_error(err: c_int, buffer: *mut c_char, size: c_ulong);
     pub fn set_allocators(m: MallocFn, f: FreeFn);
+    
+    // GPD estimators
+    pub fn grimshaw_estimator(peaks: *const Peaks, gamma: *mut c_double, sigma: *mut c_double) -> c_double;
 }
