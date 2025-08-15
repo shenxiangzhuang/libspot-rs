@@ -4,36 +4,31 @@ use std::path::Path;
 use std::process::Command;
 
 fn main() {
-    let libspot_dir = Path::new(&env::var("CARGO_MANIFEST_DIR").unwrap()).join("libspot");
-    
-    // Build libspot if not already built
-    if !libspot_dir.join("dist").exists() {
-        Command::new("make")
-            .current_dir(&libspot_dir)
-            .status()
-            .expect("Failed to build libspot");
-    }
-
-    // Copy built library to OUT_DIR - try both versions
     let out_dir = env::var("OUT_DIR").unwrap();
-    let library_paths = [
-        libspot_dir.join("dist/libspot.a.2.0b4"),
-        libspot_dir.join("dist/libspot.a.2.0b3"),
-    ];
-    
-    let mut copied = false;
-    for path in &library_paths {
-        if path.exists() {
-            fs::copy(path, Path::new(&out_dir).join("libspot.a"))
-                .expect("Failed to copy library");
-            copied = true;
-            break;
-        }
-    }
-    
-    if !copied {
-        panic!("Could not find libspot library at expected paths");
-    }
+    let libspot_dir = Path::new(&env::var("CARGO_MANIFEST_DIR").unwrap()).parent().unwrap().parent().unwrap().join("libspot");
+    let build_dir = Path::new(&out_dir).join("libspot");
+
+    // Copy source and build in OUT_DIR
+    Command::new("cp")
+        .args([
+            "-r",
+            &libspot_dir.to_string_lossy(),
+            &build_dir.to_string_lossy(),
+        ])
+        .status()
+        .expect("Failed to copy libspot source");
+
+    Command::new("make")
+        .current_dir(&build_dir)
+        .status()
+        .expect("Failed to build libspot");
+
+    // Copy built library to OUT_DIR
+    fs::copy(
+        build_dir.join("dist/libspot.a.2.0b3"),
+        Path::new(&out_dir).join("libspot.a"),
+    )
+    .expect("Failed to copy library");
 
     // Tell cargo where to find native libraries (search in OUT_DIR)
     println!("cargo:rustc-link-search=native={out_dir}");
@@ -45,5 +40,5 @@ fn main() {
     println!("cargo:rustc-link-lib=m");
 
     // Rerun build script if libspot source files change
-    println!("cargo:rerun-if-changed=libspot/");
+    println!("cargo:rerun-if-changed=../../libspot/");
 }

@@ -1,0 +1,25 @@
+[package]
+name = "libspot"
+version = "0.1.0"
+edition = "2021"
+authors = ["Mathew Shen <datahonor@gmail.com>"]
+documentation = "https://docs.rs/crate/libspot"
+repository = "https://github.com/shenxiangzhuang/libspot-rs"
+readme = "README.md"
+license = "LGPL-3.0"
+description = "Pure Rust implementation of the SPOT algorithm for time series anomaly detection"
+keywords = ["Spot", "TimeSeries", "AnomalyDetection"]
+
+# Include style for pure Rust implementation
+include = [
+    "src/**/*",
+    "examples/**/*",
+    "tests/**/*",
+    "./README.md",
+    "./LICENSE",
+]
+
+[dependencies]
+
+[dev-dependencies]
+approx = "0.5.1"

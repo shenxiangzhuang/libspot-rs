@@ -36,7 +36,6 @@ version = "2.0.0-beta.3.0"
 dependencies = [
  "approx",
  "libc",
- "libspot",
 ]
 
 [[package]]

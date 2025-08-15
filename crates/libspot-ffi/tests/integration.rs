@@ -1,5 +1,5 @@
 use approx::assert_relative_eq;
-use libspot_ffi::{SpotConfig, SpotDetector, SpotError, SpotStatus};
+use libspot::{SpotConfig, SpotDetector, SpotError, SpotStatus};
 
 /// Test basic SPOT detector initialization - validates that our binding correctly initializes the C library
 #[test]
