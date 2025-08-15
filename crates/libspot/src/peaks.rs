@@ -4,6 +4,7 @@
 //! about peaks data using an underlying Ubend circular buffer.
 
 use crate::error::SpotResult;
+use crate::Float;
 use crate::math::is_nan;
 use crate::ubend::Ubend;
 
@@ -11,13 +12,13 @@ use crate::ubend::Ubend;
 #[derive(Debug, Clone)]
 pub struct Peaks {
     /// Sum of the elements
-    e: f64,
+    e: Float,
     /// Sum of the square of the elements
-    e2: f64,
+    e2: Float,
     /// Minimum of the elements
-    min: f64,
+    min: Float,
     /// Maximum of the elements
-    max: f64,
+    max: Float,
     /// Underlying data container
     container: Ubend,
 }
@@ -28,8 +29,8 @@ impl Peaks {
         Ok(Self {
             e: 0.0,
             e2: 0.0,
-            min: f64::NAN,
-            max: f64::NAN,
+            min: f64::NAN as Float,
+            max: f64::NAN as Float,
             container: Ubend::new(size)?,
         })
     }
@@ -40,7 +41,7 @@ impl Peaks {
     }
 
     /// Add a new data point into the peaks
-    pub fn push(&mut self, x: f64) {
+    pub fn push(&mut self, x: Float) {
         let erased = self.container.push(x);
         let size = self.size();
 
@@ -71,20 +72,20 @@ impl Peaks {
     }
 
     /// Compute the mean of the elements
-    pub fn mean(&self) -> f64 {
+    pub fn mean(&self) -> Float {
         let size = self.size();
         if size == 0 {
-            f64::NAN
+            f64::NAN as Float
         } else {
             self.e / (size as f64)
         }
     }
 
     /// Compute the variance of the elements
-    pub fn variance(&self) -> f64 {
+    pub fn variance(&self) -> Float {
         let size = self.size();
         if size == 0 {
-            f64::NAN
+            f64::NAN as Float
         } else {
             let size_f = size as f64;
             let mean = self.e / size_f;
@@ -93,22 +94,22 @@ impl Peaks {
     }
 
     /// Get the minimum value
-    pub fn min(&self) -> f64 {
+    pub fn min(&self) -> Float {
         self.min
     }
 
     /// Get the maximum value
-    pub fn max(&self) -> f64 {
+    pub fn max(&self) -> Float {
         self.max
     }
 
     /// Get the sum of elements
-    pub fn sum(&self) -> f64 {
+    pub fn sum(&self) -> Float {
         self.e
     }
 
     /// Get the sum of squares
-    pub fn sum_squares(&self) -> f64 {
+    pub fn sum_squares(&self) -> Float {
         self.e2
     }
 
@@ -125,8 +126,8 @@ impl Peaks {
     /// This maintains exact compatibility with the C library results.
     fn update_stats(&mut self) {
         // Reset min and max
-        self.min = f64::NAN;
-        self.max = f64::NAN;
+        self.min = f64::NAN as Float;
+        self.max = f64::NAN as Float;
         // Reset accumulators
         self.e = 0.0;
         self.e2 = 0.0;

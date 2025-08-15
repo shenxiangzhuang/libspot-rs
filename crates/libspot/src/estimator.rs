@@ -4,21 +4,22 @@
 //! for Generalized Pareto Distribution parameters.
 
 use crate::math::{is_nan, xlog, xmin};
+use crate::Float;
 use crate::peaks::Peaks;
 
 /// Default epsilon for Brent's method
-const BRENT_DEFAULT_EPSILON: f64 = 2.0e-8;
+const BRENT_DEFAULT_EPSILON: Float = 2.0e-8;
 
 /// Maximum iterations for Brent's method
 const BRENT_ITMAX: usize = 200;
 
 /// Method of Moments estimator for GPD parameters
-pub fn mom_estimator(peaks: &Peaks) -> (f64, f64, f64) {
+pub fn mom_estimator(peaks: &Peaks) -> (Float, Float, Float) {
     let e = peaks.mean();
     let v = peaks.variance();
     
     if is_nan(e) || is_nan(v) || v <= 0.0 {
-        return (f64::NAN, f64::NAN, f64::NAN);
+        return (f64::NAN as Float, f64::NAN as Float, f64::NAN as Float);
     }
     
     let r = e * e / v;
@@ -30,13 +31,13 @@ pub fn mom_estimator(peaks: &Peaks) -> (f64, f64, f64) {
 }
 
 /// Grimshaw estimator for GPD parameters
-pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
+pub fn grimshaw_estimator(peaks: &Peaks) -> (Float, Float, Float) {
     let mini = peaks.min();
     let maxi = peaks.max();
     let mean = peaks.mean();
     
     if is_nan(mini) || is_nan(maxi) || is_nan(mean) {
-        return (f64::NAN, f64::NAN, f64::NAN);
+        return (f64::NAN as Float, f64::NAN as Float, f64::NAN as Float);
     }
     
     let epsilon = xmin(BRENT_DEFAULT_EPSILON, 0.5 / maxi);
@@ -98,12 +99,12 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
 }
 
 /// Compute log-likelihood for GPD with given parameters
-pub fn compute_log_likelihood(peaks: &Peaks, gamma: f64, sigma: f64) -> f64 {
+pub fn compute_log_likelihood(peaks: &Peaks, gamma: Float, sigma: Float) -> Float {
     let nt_local = peaks.size();
     let nt = nt_local as f64;
     
     if nt == 0.0 || sigma <= 0.0 {
-        return f64::NEG_INFINITY;
+        return f64::NEG_INFINITY as Float;
     }
     
     if gamma == 0.0 {
@@ -119,7 +120,7 @@ pub fn compute_log_likelihood(peaks: &Peaks, gamma: f64, sigma: f64) -> f64 {
         if let Some(value) = peaks.container().get(i) {
             let term = 1.0 + x * value;
             if term <= 0.0 {
-                return f64::NEG_INFINITY; // Invalid parameters
+                return f64::NEG_INFINITY as Float; // Invalid parameters
             }
             r += -c * xlog(term);
         }
@@ -129,7 +130,7 @@ pub fn compute_log_likelihood(peaks: &Peaks, gamma: f64, sigma: f64) -> f64 {
 }
 
 /// Grimshaw w function for root finding
-fn grimshaw_w(x: f64, peaks: &Peaks) -> f64 {
+fn grimshaw_w(x: Float, peaks: &Peaks) -> Float {
     let nt_local = peaks.size();
     let mut u = 0.0;
     let mut v = 0.0;
@@ -138,7 +139,7 @@ fn grimshaw_w(x: f64, peaks: &Peaks) -> f64 {
         if let Some(data_i) = peaks.container().get(i) {
             let s = 1.0 + x * data_i;
             if s <= 0.0 {
-                return f64::NAN; // Invalid
+                return f64::NAN as Float; // Invalid
             }
             u += 1.0 / s;
             v += xlog(s);
@@ -146,7 +147,7 @@ fn grimshaw_w(x: f64, peaks: &Peaks) -> f64 {
     }
     
     if nt_local == 0 {
-        return f64::NAN;
+        return f64::NAN as Float;
     }
     
     let nt = nt_local as f64;
@@ -154,7 +155,7 @@ fn grimshaw_w(x: f64, peaks: &Peaks) -> f64 {
 }
 
 /// Grimshaw v function
-fn grimshaw_v(x: f64, peaks: &Peaks) -> f64 {
+fn grimshaw_v(x: Float, peaks: &Peaks) -> Float {
     let mut v = 0.0;
     let nt_local = peaks.size();
     
@@ -169,7 +170,7 @@ fn grimshaw_v(x: f64, peaks: &Peaks) -> f64 {
 }
 
 /// Compute simplified log likelihood for Grimshaw method
-fn grimshaw_simplified_log_likelihood(x_star: f64, peaks: &Peaks) -> (f64, f64, f64) {
+fn grimshaw_simplified_log_likelihood(x_star: Float, peaks: &Peaks) -> (Float, Float, Float) {
     let (gamma, sigma) = if x_star == 0.0 {
         (0.0, peaks.mean())
     } else {
@@ -185,9 +186,9 @@ fn grimshaw_simplified_log_likelihood(x_star: f64, peaks: &Peaks) -> (f64, f64, 
 /// Brent's method for root finding
 /// Returns Some(root) if found, None otherwise
 /// This implementation matches the C libspot brent.c exactly
-fn brent<F>(x1: f64, x2: f64, func: F, tol: f64) -> Option<f64>
+fn brent<F>(x1: Float, x2: Float, func: F, tol: Float) -> Option<Float>
 where
-    F: Fn(f64) -> f64,
+    F: Fn(Float) -> Float,
 {
     let mut a = x1;
     let mut b = x2;

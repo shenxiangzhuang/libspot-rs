@@ -3,20 +3,22 @@
 //! This module provides the core mathematical functions used by the SPOT algorithm,
 //! implemented in pure Rust to match the C behavior exactly.
 
+use crate::Float;
+
 /// Constant for LOG(2) - exact same hex representation as C implementation
-const LOG2: f64 = f64::from_bits(0x3FE62E42FEFA39EF);
+const LOG2: Float = f64::from_bits(0x3FE62E42FEFA39EF) as Float;
 
 /// Check if a double is NaN
 #[inline]
-pub fn is_nan(x: f64) -> bool {
+pub fn is_nan(x: Float) -> bool {
     x != x
 }
 
 /// Return the minimum of two values
 #[inline]
-pub fn xmin(a: f64, b: f64) -> f64 {
+pub fn xmin(a: Float, b: Float) -> Float {
     if is_nan(a) || is_nan(b) {
-        f64::NAN
+        f64::NAN as Float
     } else if a < b {
         a
     } else {
@@ -26,12 +28,12 @@ pub fn xmin(a: f64, b: f64) -> f64 {
 
 /// Natural logarithm using Shanks' continued fraction algorithm
 /// Returns -∞ for x=0 and NaN for x<0
-pub fn xlog(x: f64) -> f64 {
+pub fn xlog(x: Float) -> Float {
     if x < 0.0 || is_nan(x) {
-        return f64::NAN;
+        return f64::NAN as Float;
     }
     if x == 0.0 {
-        return f64::NEG_INFINITY;
+        return f64::NEG_INFINITY as Float;
     }
 
     // Use frexp to extract mantissa and exponent
@@ -45,9 +47,9 @@ pub fn xlog(x: f64) -> f64 {
 }
 
 /// Exponential function using Khovanskii's continued fraction
-pub fn xexp(x: f64) -> f64 {
+pub fn xexp(x: Float) -> Float {
     if is_nan(x) {
-        return f64::NAN;
+        return f64::NAN as Float;
     }
     if x < 0.0 {
         return 1.0 / xexp(-x);
@@ -62,12 +64,12 @@ pub fn xexp(x: f64) -> f64 {
 }
 
 /// Power function: a^x = exp(x * ln(a))
-pub fn xpow(a: f64, x: f64) -> f64 {
+pub fn xpow(a: Float, x: Float) -> Float {
     xexp(x * xlog(a))
 }
 
 /// Logarithm continued fraction implementation (11th order)
-fn log_cf_11(z: f64) -> f64 {
+fn log_cf_11(z: Float) -> Float {
     let x = z - 1.0;
     let xx = x + 2.0;
     let x2 = x * x;
@@ -107,7 +109,7 @@ fn log_cf_11(z: f64) -> f64 {
 }
 
 /// Exponential continued fraction implementation (6th order)
-fn exp_cf_6(z: f64) -> f64 {
+fn exp_cf_6(z: Float) -> Float {
     let z2 = z * z;
 
     2.0 * z /
@@ -122,7 +124,7 @@ fn exp_cf_6(z: f64) -> f64 {
 
 /// Extract mantissa and exponent from floating point number
 /// Replicates the behavior of frexp()
-fn extract_frexp(x: f64) -> (f64, i32) {
+fn extract_frexp(x: Float) -> (Float, i32) {
     if x == 0.0 {
         return (x, 0);
     }
@@ -158,18 +160,18 @@ mod tests {
 
     #[test]
     fn test_is_nan() {
-        assert!(is_nan(f64::NAN));
+        assert!(is_nan(f64::NAN as Float));
         assert!(!is_nan(1.0));
         assert!(!is_nan(0.0));
-        assert!(!is_nan(f64::INFINITY));
+        assert!(!is_nan(f64::INFINITY as Float));
     }
 
     #[test]
     fn test_xmin() {
         assert_relative_eq!(xmin(1.0, 2.0), 1.0);
         assert_relative_eq!(xmin(2.0, 1.0), 1.0);
-        assert!(is_nan(xmin(f64::NAN, 1.0)));
-        assert!(is_nan(xmin(1.0, f64::NAN)));
+        assert!(is_nan(xmin(f64::NAN as Float, 1.0)));
+        assert!(is_nan(xmin(1.0, f64::NAN as Float)));
     }
 
     #[test]
@@ -178,7 +180,7 @@ mod tests {
         assert_relative_eq!(xlog(std::f64::consts::E), 1.0, epsilon = 1e-14);
         assert_relative_eq!(xlog(2.0), LOG2, epsilon = 1e-15);
         assert!(is_nan(xlog(-1.0)));
-        assert_eq!(xlog(0.0), f64::NEG_INFINITY);
+        assert_eq!(xlog(0.0), f64::NEG_INFINITY as Float);
     }
 
     #[test]

@@ -5,6 +5,7 @@
 //! and then overwrites older data with newer data.
 
 use crate::error::{SpotError, SpotResult};
+use crate::Float;
 
 /// Circular buffer implementation that matches the C Ubend structure
 #[derive(Debug, Clone)]
@@ -14,11 +15,11 @@ pub struct Ubend {
     /// Maximum storage capacity
     capacity: usize,
     /// Last erased value (i.e., replaced by a new one)
-    last_erased_data: f64,
+    last_erased_data: Float,
     /// Container fill status (true = filled, false = not filled)
     filled: bool,
     /// Data container
-    data: Vec<f64>,
+    data: Vec<Float>,
 }
 
 impl Ubend {
@@ -32,7 +33,7 @@ impl Ubend {
             cursor: 0,
             filled: false,
             capacity,
-            last_erased_data: f64::NAN,
+            last_erased_data: f64::NAN as Float,
             data: vec![0.0; capacity],
         })
     }
@@ -49,7 +50,7 @@ impl Ubend {
 
     /// Push a new value into the container
     /// Returns the value that was erased (if any), otherwise NaN
-    pub fn push(&mut self, x: f64) -> f64 {
+    pub fn push(&mut self, x: Float) -> Float {
         // If the container has already been filled, we must keep in memory
         // the data we will erase
         if self.filled {
@@ -79,7 +80,7 @@ impl Ubend {
     }
 
     /// Get the data at a specific index in insertion order
-    pub fn get(&self, index: usize) -> Option<f64> {
+    pub fn get(&self, index: usize) -> Option<Float> {
         let size = self.size();
         if index >= size {
             return None;
@@ -96,7 +97,7 @@ impl Ubend {
     }
 
     /// Access to raw data (for compatibility with C implementation)
-    pub fn raw_data(&self) -> &[f64] {
+    pub fn raw_data(&self) -> &[Float] {
         &self.data
     }
 
@@ -116,12 +117,12 @@ impl Ubend {
     }
 
     /// Get last erased data
-    pub fn last_erased_data(&self) -> f64 {
+    pub fn last_erased_data(&self) -> Float {
         self.last_erased_data
     }
 
     /// Get all data in insertion order as a vector
-    pub fn data(&self) -> Vec<f64> {
+    pub fn data(&self) -> Vec<Float> {
         self.iter().collect()
     }
 }
@@ -133,7 +134,7 @@ pub struct UbendIterator<'a> {
 }
 
 impl<'a> Iterator for UbendIterator<'a> {
-    type Item = f64;
+    type Item = Float;
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = self.ubend.get(self.index);
@@ -252,12 +253,12 @@ mod tests {
         ubend.push(2.0);
         ubend.push(3.0);
         
-        let values: Vec<f64> = ubend.iter().collect();
+        let values: Vec<Float> = ubend.iter().collect();
         assert_eq!(values, vec![1.0, 2.0, 3.0]);
         
         // Test after wraparound
         ubend.push(4.0);
-        let values: Vec<f64> = ubend.iter().collect();
+        let values: Vec<Float> = ubend.iter().collect();
         assert_eq!(values, vec![2.0, 3.0, 4.0]);
     }
 

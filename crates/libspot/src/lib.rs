@@ -27,6 +27,12 @@
 //! // ... use detector
 //! ```
 
+use std::os::raw::c_double;
+
+/// Type alias for floating-point values to ensure C compatibility
+/// Using c_double throughout eliminates precision differences with C implementation
+pub type Float = c_double;
+
 mod config;
 mod error;
 mod estimator;

@@ -1,16 +1,19 @@
 //! Configuration types for SPOT detector
 
+use crate::Float;
+
+
 /// Configuration parameters for SPOT detector
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpotConfig {
     /// Anomaly probability threshold (must be between 0 and 1-level)
-    pub q: f64,
+    pub q: Float,
     /// Whether to observe lower tail (false = upper tail, true = lower tail)
     pub low_tail: bool,
     /// Whether to discard anomalies from model updates
     pub discard_anomalies: bool,
     /// Excess level - high quantile that delimits the tail (must be between 0 and 1)
-    pub level: f64,
+    pub level: Float,
     /// Maximum number of excess data points to keep
     pub max_excess: usize,
 }

@@ -4,6 +4,7 @@
 //! using Generalized Pareto Distribution (GPD) parameters.
 
 use crate::error::SpotResult;
+use crate::Float;
 use crate::math::is_nan;
 use crate::estimator::{grimshaw_estimator, mom_estimator};
 use crate::math::{xexp, xlog, xpow};
@@ -13,9 +14,9 @@ use crate::peaks::Peaks;
 #[derive(Debug, Clone)]
 pub struct Tail {
     /// GPD gamma parameter
-    gamma: f64,
+    gamma: Float,
     /// GPD sigma parameter
-    sigma: f64,
+    sigma: Float,
     /// Underlying Peaks structure
     peaks: Peaks,
 }
@@ -24,26 +25,26 @@ impl Tail {
     /// Initialize a new Tail structure with the given size
     pub fn new(size: usize) -> SpotResult<Self> {
         Ok(Self {
-            gamma: f64::NAN,
-            sigma: f64::NAN,
+            gamma: f64::NAN as Float,
+            sigma: f64::NAN as Float,
             peaks: Peaks::new(size)?,
         })
     }
 
     /// Add a new data point into the tail
-    pub fn push(&mut self, x: f64) {
+    pub fn push(&mut self, x: Float) {
         self.peaks.push(x);
     }
 
     /// Fit the GPD parameters using the available estimators
     /// Returns the log-likelihood of the best fit
-    pub fn fit(&mut self) -> f64 {
+    pub fn fit(&mut self) -> Float {
         if self.peaks.size() == 0 {
-            return f64::NAN;
+            return f64::NAN as Float;
         }
 
         // Match C implementation exactly: try each estimator and pick best
-        let mut max_llhood = f64::NAN;
+        let mut max_llhood = f64::NAN as Float;
         let mut tmp_gamma;
         let mut tmp_sigma;
         
@@ -79,9 +80,9 @@ impl Tail {
     }
 
     /// Compute the probability P(X > z) = p given the tail threshold difference d = z - t
-    pub fn probability(&self, s: f64, d: f64) -> f64 {
+    pub fn probability(&self, s: Float, d: Float) -> Float {
         if is_nan(self.gamma) || is_nan(self.sigma) || self.sigma <= 0.0 {
-            return f64::NAN;
+            return f64::NAN as Float;
         }
 
         // Use exact equality check like C implementation (no tolerance)
@@ -96,9 +97,9 @@ impl Tail {
     /// Compute the extreme quantile for given probability q
     /// s is the ratio Nt/n (an estimator of P(X>t) = 1-F(t))
     /// q is the desired low probability
-    pub fn quantile(&self, s: f64, q: f64) -> f64 {
+    pub fn quantile(&self, s: Float, q: Float) -> Float {
         if is_nan(self.gamma) || is_nan(self.sigma) || self.sigma <= 0.0 {
-            return f64::NAN;
+            return f64::NAN as Float;
         }
 
         let r = q / s;
@@ -111,12 +112,12 @@ impl Tail {
     }
 
     /// Get the current gamma parameter
-    pub fn gamma(&self) -> f64 {
+    pub fn gamma(&self) -> Float {
         self.gamma
     }
 
     /// Get the current sigma parameter
-    pub fn sigma(&self) -> f64 {
+    pub fn sigma(&self) -> Float {
         self.sigma
     }
 
