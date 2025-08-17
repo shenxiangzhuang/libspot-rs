@@ -6,7 +6,12 @@ build = "build.rs"
 
 [dependencies]
 libspot = { path = "../crates/libspot" }
+libspot-ffi = { path = "../crates/libspot-ffi" }
 libc = "0.2"
+
+[lib]
+name = "experiment"
+path = "lib.rs"
 
 [[bin]]
 name = "capture_critical_data"
@@ -23,3 +28,27 @@ path = "c_grimshaw.rs"
 [[bin]]
 name = "comprehensive_comparison"
 path = "comprehensive_comparison.rs"
+
+[[bin]]
+name = "isolate_spot_components"
+path = "isolate_spot_components.rs"
+
+[[bin]]
+name = "compare_parameters"
+path = "compare_parameters.rs"
+
+[[bin]]
+name = "debug_counting"
+path = "debug_counting.rs"
+
+[[bin]]
+name = "find_z_divergence"
+path = "find_z_divergence.rs"
+
+[[bin]]
+name = "isolate_first_excess"
+path = "isolate_first_excess.rs"
+
+[[bin]]
+name = "test_quantile_precision"
+path = "test_quantile_precision.rs"
