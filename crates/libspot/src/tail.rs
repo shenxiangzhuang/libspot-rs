@@ -6,7 +6,6 @@
 use crate::error::SpotResult;
 
 use crate::estimator::{grimshaw_estimator, mom_estimator};
-use crate::math::is_nan;
 use crate::math::{xexp, xlog, xpow};
 use crate::peaks::Peaks;
 
@@ -56,7 +55,7 @@ impl Tail {
             llhood
         };
 
-        if is_nan(max_llhood) || llhood > max_llhood {
+        if max_llhood.is_nan() || llhood > max_llhood {
             max_llhood = llhood;
             self.gamma = tmp_gamma;
             self.sigma = tmp_sigma;
@@ -70,12 +69,7 @@ impl Tail {
             llhood
         };
 
-        // Debug the critical case to see which estimator is selected
-        let debug_active =
-            self.peaks.size() == 200 && (self.peaks.mean() - 0.766766777376012).abs() < 1e-10;
-        if debug_active {}
-
-        if is_nan(max_llhood) || llhood > max_llhood {
+        if max_llhood.is_nan() || llhood > max_llhood {
             // Back to original logic
             max_llhood = llhood;
             self.gamma = tmp_gamma;
@@ -87,7 +81,7 @@ impl Tail {
 
     /// Compute the probability P(X > z) = p given the tail threshold difference d = z - t
     pub fn probability(&self, s: f64, d: f64) -> f64 {
-        if is_nan(self.gamma) || is_nan(self.sigma) || self.sigma <= 0.0 {
+        if self.gamma.is_nan() || self.sigma.is_nan() || self.sigma <= 0.0 {
             return f64::NAN;
         }
 
@@ -104,7 +98,7 @@ impl Tail {
     /// s is the ratio Nt/n (an estimator of P(X>t) = 1-F(t))
     /// q is the desired low probability
     pub fn quantile(&self, s: f64, q: f64) -> f64 {
-        if is_nan(self.gamma) || is_nan(self.sigma) || self.sigma <= 0.0 {
+        if self.gamma.is_nan() || self.sigma.is_nan() || self.sigma <= 0.0 {
             return f64::NAN;
         }
 
@@ -147,8 +141,8 @@ mod tests {
     fn test_tail_creation() {
         let tail = Tail::new(10).unwrap();
         assert_eq!(tail.size(), 0);
-        assert!(is_nan(tail.gamma()));
-        assert!(is_nan(tail.sigma()));
+        assert!(tail.gamma().is_nan());
+        assert!(tail.sigma().is_nan());
     }
 
     #[test]
@@ -174,9 +168,9 @@ mod tests {
     fn test_tail_fit_empty() {
         let mut tail = Tail::new(5).unwrap();
         let llhood = tail.fit();
-        assert!(is_nan(llhood));
-        assert!(is_nan(tail.gamma()));
-        assert!(is_nan(tail.sigma()));
+        assert!(llhood.is_nan());
+        assert!(tail.gamma().is_nan());
+        assert!(tail.sigma().is_nan());
     }
 
     #[test]
@@ -189,12 +183,12 @@ mod tests {
         }
 
         let llhood = tail.fit();
-        assert!(!is_nan(llhood));
+        assert!(!llhood.is_nan());
         assert!(llhood.is_finite());
 
         // Parameters should be fitted
-        assert!(!is_nan(tail.gamma()));
-        assert!(!is_nan(tail.sigma()));
+        assert!(!tail.gamma().is_nan());
+        assert!(!tail.sigma().is_nan());
         assert!(tail.sigma() > 0.0); // Sigma should be positive
     }
 
@@ -207,7 +201,7 @@ mod tests {
         tail.sigma = 1.0;
 
         let q = tail.quantile(0.1, 0.01);
-        assert!(!is_nan(q));
+        assert!(!q.is_nan());
         assert!(q > 0.0); // Should be positive for low probability
     }
 
@@ -220,7 +214,7 @@ mod tests {
         tail.sigma = 1.0;
 
         let q = tail.quantile(0.1, 0.01);
-        assert!(!is_nan(q));
+        assert!(!q.is_nan());
         assert!(q.is_finite());
     }
 
@@ -233,7 +227,7 @@ mod tests {
         tail.sigma = 1.0;
 
         let p = tail.probability(0.1, 2.0);
-        assert!(!is_nan(p));
+        assert!(!p.is_nan());
         assert!(p >= 0.0 && p <= 0.1);
     }
 
@@ -246,7 +240,7 @@ mod tests {
         tail.sigma = 1.0;
 
         let p = tail.probability(0.1, 2.0);
-        assert!(!is_nan(p));
+        assert!(!p.is_nan());
         assert!(p >= 0.0);
     }
 
@@ -259,10 +253,10 @@ mod tests {
         tail.sigma = 0.0;
 
         let q = tail.quantile(0.1, 0.01);
-        assert!(is_nan(q));
+        assert!(q.is_nan());
 
         let p = tail.probability(0.1, 2.0);
-        assert!(is_nan(p));
+        assert!(p.is_nan());
     }
 
     #[test]
@@ -281,9 +275,9 @@ mod tests {
         let q = 0.01;
         let quantile_val = tail.quantile(s, q);
 
-        if !is_nan(quantile_val) && quantile_val.is_finite() {
+        if !quantile_val.is_nan() && quantile_val.is_finite() {
             let prob_val = tail.probability(s, quantile_val);
-            if !is_nan(prob_val) && prob_val.is_finite() {
+            if !prob_val.is_nan() && prob_val.is_finite() {
                 // The probability should be approximately q
                 // Allow for some numerical error
                 assert!((prob_val - q).abs() < q * 0.1 || prob_val < q * 2.0);

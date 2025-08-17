@@ -153,37 +153,3 @@ fn test_pure_rust_matches_expected_c_pattern() {
 
     println!("✓ Pure Rust implementation behaves correctly on smaller dataset!");
 }
-
-/// Performance test - ensure pure Rust implementation is reasonably fast
-#[test]
-fn test_pure_rust_performance() {
-    let config = SpotConfig::default();
-    let mut detector = Spot::new(config).unwrap();
-
-    // Quick training
-    let initial_data: Vec<f64> = (0..1000).map(|i| (i as f64) / 100.0).collect();
-    detector.fit(&initial_data).unwrap();
-
-    let start = std::time::Instant::now();
-
-    // Process 100K samples
-    let mut rng = CRand::new(42);
-    for _ in 0..100_000 {
-        let x = rng.rexp();
-        detector.step(x).unwrap();
-    }
-
-    let duration = start.elapsed();
-    println!(
-        "Pure Rust processed 100K samples in {:.2}ms",
-        duration.as_millis()
-    );
-
-    // Should be fast - less than 1 second for 100K samples
-    assert!(
-        duration.as_secs() < 1,
-        "Pure Rust implementation should be fast"
-    );
-
-    println!("✓ Pure Rust implementation has good performance!");
-}

@@ -151,7 +151,6 @@ impl<'a> ExactSizeIterator for UbendIterator<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::is_nan;
     use approx::assert_relative_eq;
 
     #[test]
@@ -161,7 +160,7 @@ mod tests {
         assert_eq!(ubend.size(), 0);
         assert!(!ubend.is_filled());
         assert_eq!(ubend.cursor(), 0);
-        assert!(is_nan(ubend.last_erased_data()));
+        assert!(ubend.last_erased_data().is_nan());
     }
 
     #[test]
@@ -177,21 +176,21 @@ mod tests {
 
         // Push first element
         let erased = ubend.push(1.0);
-        assert!(is_nan(erased));
+        assert!(erased.is_nan());
         assert_eq!(ubend.size(), 1);
         assert!(!ubend.is_filled());
         assert_eq!(ubend.cursor(), 1);
 
         // Push second element
         let erased = ubend.push(2.0);
-        assert!(is_nan(erased));
+        assert!(erased.is_nan());
         assert_eq!(ubend.size(), 2);
         assert!(!ubend.is_filled());
         assert_eq!(ubend.cursor(), 2);
 
         // Push third element
         let erased = ubend.push(3.0);
-        assert!(is_nan(erased));
+        assert!(erased.is_nan());
         assert_eq!(ubend.size(), 3);
         assert!(ubend.is_filled());
         assert_eq!(ubend.cursor(), 0);

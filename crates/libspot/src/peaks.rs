@@ -5,7 +5,6 @@
 
 use crate::error::SpotResult;
 
-use crate::math::is_nan;
 use crate::ubend::Ubend;
 
 /// Structure that computes stats about the peaks
@@ -59,7 +58,7 @@ impl Peaks {
 
         // Then we treat the case where a data has been erased
         // In this case we must update the accumulators and possibly update the min/max
-        if !is_nan(erased) {
+        if !erased.is_nan() {
             self.e -= erased;
             self.e2 -= erased * erased;
             if (erased <= self.min) || (erased >= self.max) {
@@ -146,10 +145,10 @@ impl Peaks {
             // The C code overwrites e2 on every iteration, so only the last value's square remains.
             self.e2 = value * value;
 
-            if is_nan(self.min) || (value < self.min) {
+            if self.min.is_nan() || (value < self.min) {
                 self.min = value;
             }
-            if is_nan(self.max) || (value > self.max) {
+            if self.max.is_nan() || (value > self.max) {
                 self.max = value;
             }
         }
@@ -168,10 +167,10 @@ mod tests {
         assert_eq!(peaks.size(), 0);
         assert_relative_eq!(peaks.sum(), 0.0);
         assert_relative_eq!(peaks.sum_squares(), 0.0);
-        assert!(is_nan(peaks.min()));
-        assert!(is_nan(peaks.max()));
-        assert!(is_nan(peaks.mean()));
-        assert!(is_nan(peaks.variance()));
+        assert!(peaks.min().is_nan());
+        assert!(peaks.max().is_nan());
+        assert!(peaks.mean().is_nan());
+        assert!(peaks.variance().is_nan());
     }
 
     #[test]

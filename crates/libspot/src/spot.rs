@@ -6,7 +6,6 @@
 use crate::config::SpotConfig;
 
 use crate::error::{SpotError, SpotResult};
-use crate::math::is_nan;
 use crate::p2::p2_quantile;
 use crate::status::SpotStatus;
 use crate::tail::Tail;
@@ -77,7 +76,7 @@ impl Spot {
             p2_quantile(self.level, data)
         };
 
-        if is_nan(et) {
+        if et.is_nan() {
             return Err(SpotError::ExcessThresholdIsNaN);
         }
 
@@ -99,7 +98,7 @@ impl Spot {
 
         // Compute first anomaly threshold
         self.anomaly_threshold = self.quantile(self.q);
-        if is_nan(self.anomaly_threshold) {
+        if self.anomaly_threshold.is_nan() {
             return Err(SpotError::AnomalyThresholdIsNaN);
         }
 
@@ -108,7 +107,7 @@ impl Spot {
 
     /// Process a single data point and return its classification
     pub fn step(&mut self, x: f64) -> SpotResult<SpotStatus> {
-        if is_nan(x) {
+        if x.is_nan() {
             return Err(SpotError::DataIsNaN);
         }
 
@@ -235,8 +234,8 @@ mod tests {
         assert!(!spot.low);
         assert!(spot.discard_anomalies);
         assert_relative_eq!(spot.level, 0.998);
-        assert!(is_nan(spot.anomaly_threshold()));
-        assert!(is_nan(spot.excess_threshold()));
+        assert!(spot.anomaly_threshold().is_nan());
+        assert!(spot.excess_threshold().is_nan());
         assert_eq!(spot.n(), 0);
         assert_eq!(spot.nt(), 0);
     }
@@ -275,8 +274,8 @@ mod tests {
         assert!(result.is_ok());
 
         // After fit, thresholds should be valid
-        assert!(!is_nan(spot.anomaly_threshold()));
-        assert!(!is_nan(spot.excess_threshold()));
+        assert!(!spot.anomaly_threshold().is_nan());
+        assert!(!spot.excess_threshold().is_nan());
         assert!(spot.anomaly_threshold().is_finite());
         assert!(spot.excess_threshold().is_finite());
         assert_eq!(spot.n(), 1000);
@@ -354,12 +353,12 @@ mod tests {
 
         // Test quantile function
         let q = spot.quantile(0.01);
-        assert!(!is_nan(q));
+        assert!(!q.is_nan());
         assert!(q.is_finite());
 
         // Test probability function
         let p = spot.probability(q);
-        assert!(!is_nan(p));
+        assert!(!p.is_nan());
         assert!(p >= 0.0);
     }
 

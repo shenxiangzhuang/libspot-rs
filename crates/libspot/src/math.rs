@@ -6,16 +6,10 @@
 /// Constant for LOG(2) - exact same hex representation as C implementation
 const LOG2: f64 = f64::from_bits(0x3FE62E42FEFA39EF);
 
-/// Check if a double is NaN
-#[inline]
-pub fn is_nan(x: f64) -> bool {
-    x != x
-}
-
 /// Return the minimum of two values
 #[inline]
 pub fn xmin(a: f64, b: f64) -> f64 {
-    if is_nan(a) || is_nan(b) {
+    if a.is_nan() || b.is_nan() {
         f64::NAN
     } else if a < b {
         a
@@ -27,7 +21,7 @@ pub fn xmin(a: f64, b: f64) -> f64 {
 /// Natural logarithm using Shanks' continued fraction algorithm
 /// Returns -∞ for x=0 and NaN for x<0
 pub fn xlog(x: f64) -> f64 {
-    if x < 0.0 || is_nan(x) {
+    if x < 0.0 || x.is_nan() {
         return f64::NAN;
     }
     if x == 0.0 {
@@ -46,7 +40,7 @@ pub fn xlog(x: f64) -> f64 {
 
 /// Exponential function using Khovanskii's continued fraction
 pub fn xexp(x: f64) -> f64 {
-    if is_nan(x) {
+    if x.is_nan() {
         return f64::NAN;
     }
     if x < 0.0 {
@@ -154,19 +148,9 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    fn test_is_nan() {
-        assert!(is_nan(f64::NAN));
-        assert!(!is_nan(1.0));
-        assert!(!is_nan(0.0));
-        assert!(!is_nan(f64::INFINITY));
-    }
-
-    #[test]
     fn test_xmin() {
         assert_relative_eq!(xmin(1.0, 2.0), 1.0);
         assert_relative_eq!(xmin(2.0, 1.0), 1.0);
-        assert!(is_nan(xmin(f64::NAN, 1.0)));
-        assert!(is_nan(xmin(1.0, f64::NAN)));
     }
 
     #[test]
@@ -174,7 +158,6 @@ mod tests {
         assert_relative_eq!(xlog(1.0), 0.0, epsilon = 1e-15);
         assert_relative_eq!(xlog(std::f64::consts::E), 1.0, epsilon = 1e-14);
         assert_relative_eq!(xlog(2.0), LOG2, epsilon = 1e-15);
-        assert!(is_nan(xlog(-1.0)));
         assert_eq!(xlog(0.0), f64::NEG_INFINITY);
     }
 

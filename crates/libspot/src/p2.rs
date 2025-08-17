@@ -72,9 +72,7 @@ impl P2 {
                 while k < 4 && xj > self.q[k] {
                     k += 1;
                 }
-                if k > 0 {
-                    k -= 1;
-                }
+                k = k.saturating_sub(1);
 
                 // Update marker positions for markers k+1 through 4
                 for i in (k + 1)..5 {
@@ -171,13 +169,11 @@ fn sort5(a: &mut [f64; 5]) {
             a.swap(3, 2);
             a.swap(2, 1);
         }
+    } else if a[4] < a[2] {
+        a.swap(4, 3);
+        a.swap(3, 2);
     } else {
-        if a[4] < a[2] {
-            a.swap(4, 3);
-            a.swap(3, 2);
-        } else {
-            a.swap(4, 3);
-        }
+        a.swap(4, 3);
     }
     // Sort new 5th element into 2nd, 3rd and 4th
     if a[4] < a[2] {
@@ -189,10 +185,8 @@ fn sort5(a: &mut [f64; 5]) {
             a.swap(4, 3);
             a.swap(3, 2);
         }
-    } else {
-        if a[4] < a[3] {
-            a.swap(4, 3);
-        }
+    } else if a[4] < a[3] {
+        a.swap(4, 3);
     }
 }
 

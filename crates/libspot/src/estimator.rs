@@ -3,7 +3,7 @@
 //! This module implements Method of Moments (MoM) and Grimshaw estimators
 //! for Generalized Pareto Distribution parameters.
 
-use crate::math::{is_nan, xlog, xmin};
+use crate::math::{xlog, xmin};
 
 use crate::peaks::Peaks;
 
@@ -18,7 +18,7 @@ pub fn mom_estimator(peaks: &Peaks) -> (f64, f64, f64) {
     let e = peaks.mean();
     let v = peaks.variance();
 
-    if is_nan(e) || is_nan(v) || v <= 0.0 {
+    if e.is_nan() || v.is_nan() || v <= 0.0 {
         return (f64::NAN, f64::NAN, f64::NAN);
     }
 
@@ -36,7 +36,7 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
     let maxi = peaks.max();
     let mean = peaks.mean();
 
-    if is_nan(mini) || is_nan(maxi) || is_nan(mean) {
+    if mini.is_nan() || maxi.is_nan() || mean.is_nan() {
         return (f64::NAN, f64::NAN, f64::NAN);
     }
 
@@ -119,7 +119,7 @@ fn grimshaw_w(x: f64, peaks: &Peaks) -> f64 {
 
     for i in 0..nt_local {
         if let Some(data_i) = peaks.container().get(i) {
-            let s: f64 = 1.0 + x * data_i as f64;
+            let s: f64 = 1.0 + x * data_i;
             if s <= 0.0 {
                 return f64::NAN; // Invalid
             }
@@ -182,7 +182,7 @@ where
     let mut fa = func(a);
     let mut fb = func(b);
 
-    if is_nan(fa) || is_nan(fb) {
+    if fa.is_nan() || fb.is_nan() {
         return None;
     }
 
@@ -257,7 +257,7 @@ where
             b += if xm >= 0.0 { tol1.abs() } else { -tol1.abs() };
         }
         fb = func(b);
-        if is_nan(fb) {
+        if fb.is_nan() {
             return None;
         }
     }
@@ -275,9 +275,9 @@ mod tests {
     fn test_mom_estimator_empty_peaks() {
         let peaks = Peaks::new(5).unwrap();
         let (gamma, sigma, llhood) = mom_estimator(&peaks);
-        assert!(is_nan(gamma));
-        assert!(is_nan(sigma));
-        assert!(is_nan(llhood));
+        assert!(gamma.is_nan());
+        assert!(sigma.is_nan());
+        assert!(llhood.is_nan());
     }
 
     #[test]
@@ -287,8 +287,8 @@ mod tests {
 
         let (gamma, sigma, _llhood) = mom_estimator(&peaks);
         // With variance = 0, this should produce specific values
-        assert!(is_nan(gamma) || gamma.is_infinite());
-        assert!(is_nan(sigma) || sigma.is_infinite());
+        assert!(gamma.is_nan() || gamma.is_infinite());
+        assert!(sigma.is_nan() || sigma.is_infinite());
     }
 
     #[test]
@@ -299,9 +299,9 @@ mod tests {
         }
 
         let (gamma, sigma, llhood) = mom_estimator(&peaks);
-        assert!(!is_nan(gamma));
-        assert!(!is_nan(sigma));
-        assert!(!is_nan(llhood));
+        assert!(!gamma.is_nan());
+        assert!(!sigma.is_nan());
+        assert!(!llhood.is_nan());
         assert!(sigma > 0.0); // Sigma should be positive
     }
 
@@ -313,7 +313,7 @@ mod tests {
         peaks.push(3.0);
 
         let ll = compute_log_likelihood(&peaks, 0.0, 2.0);
-        assert!(!is_nan(ll));
+        assert!(!ll.is_nan());
         assert!(ll.is_finite());
     }
 
@@ -325,7 +325,7 @@ mod tests {
         peaks.push(3.0);
 
         let ll = compute_log_likelihood(&peaks, 0.1, 2.0);
-        assert!(!is_nan(ll));
+        assert!(!ll.is_nan());
         assert!(ll.is_finite());
     }
 

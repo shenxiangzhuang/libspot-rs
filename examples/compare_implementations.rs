@@ -79,8 +79,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let excess_diff = (rust_detector.excess_threshold() - ffi_detector.excess_threshold()).abs();
     let anomaly_diff = (rust_detector.anomaly_threshold() - ffi_detector.anomaly_threshold()).abs();
 
-    println!("  Excess threshold difference: {:.15}", excess_diff);
-    println!("  Anomaly threshold difference: {:.15}", anomaly_diff);
+    println!("  Excess threshold difference: {excess_diff:.15}",);
+    println!("  Anomaly threshold difference: {anomaly_diff:.15}",);
 
     if excess_diff > 1e-15 || anomaly_diff > 1e-15 {
         println!("WARNING: Initial thresholds differ!");
@@ -117,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         if rust_status_int != ffi_status_int {
-            println!("    MISMATCH at sample {}!", i);
+            println!("    MISMATCH at sample {i}!");
             println!(
                 "    Rust Z={:.15} T={:.15}",
                 rust_detector.anomaly_threshold(),
