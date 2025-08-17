@@ -10,8 +10,7 @@ fn main() {
     let lib_path = libspot_dir.join("dist").join("libspot.a.2.0b4");
     if !lib_path.exists() {
         panic!(
-            "libspot library not found at {:?}. Please run 'make' in the libspot directory first.",
-            lib_path
+            "libspot library not found at {lib_path:?}. Please run 'make' in the libspot directory first."
         );
     }
 

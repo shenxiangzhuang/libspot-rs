@@ -41,6 +41,7 @@ impl P2 {
     }
 
     /// Compute quantile from data array
+    #[allow(clippy::needless_range_loop, clippy::manual_memcpy)]
     fn quantile(&mut self, data: &[f64]) -> f64 {
         let size = data.len();
 
