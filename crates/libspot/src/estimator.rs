@@ -158,8 +158,8 @@ fn grimshaw_v(x: Float, peaks: &Peaks) -> Float {
 
 /// Compute simplified log likelihood for Grimshaw method
 fn grimshaw_simplified_log_likelihood(x_star: Float, peaks: &Peaks) -> (Float, Float, Float) {
-    // Use a tolerance to handle roots that are very close to zero (matching C behavior)
-    let (gamma, sigma) = if x_star.abs() <= BRENT_DEFAULT_EPSILON || x_star == 0.0 {
+    // Match C implementation exactly: use exact equality check only
+    let (gamma, sigma) = if x_star == 0.0 {
         (0.0, peaks.mean())
     } else {
         let gamma = grimshaw_v(x_star, peaks) - 1.0;

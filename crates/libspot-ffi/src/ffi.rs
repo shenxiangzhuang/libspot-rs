@@ -65,4 +65,9 @@ extern "C" {
     
     // GPD estimators
     pub fn grimshaw_estimator(peaks: *const Peaks, gamma: *mut c_double, sigma: *mut c_double) -> c_double;
+    
+    // Mathematical functions
+    pub fn xlog(x: c_double) -> c_double;
+    pub fn xexp(x: c_double) -> c_double;
+    pub fn xpow(a: c_double, x: c_double) -> c_double;
 }

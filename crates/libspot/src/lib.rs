@@ -36,7 +36,7 @@ pub type Float = c_double;
 mod config;
 mod error;
 mod estimator;
-mod math;
+pub mod math;
 mod p2;
 mod peaks;
 mod spot;

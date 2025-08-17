@@ -52,3 +52,11 @@ path = "isolate_first_excess.rs"
 [[bin]]
 name = "test_quantile_precision"
 path = "test_quantile_precision.rs"
+
+[[bin]]
+name = "debug_log_comparison"
+path = "debug_log_comparison.rs"
+
+[[bin]]
+name = "debug_intermediate_values"
+path = "debug_intermediate_values.rs"
