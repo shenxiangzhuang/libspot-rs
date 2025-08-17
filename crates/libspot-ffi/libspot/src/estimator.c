@@ -8,6 +8,7 @@
  *
  */
 #include "estimator.h"
+#include <stdio.h>
 
 double mom_estimator(struct Peaks const *peaks, double *gamma, double *sigma) {
     const double E = peaks_mean(peaks);
@@ -110,5 +111,10 @@ double grimshaw_estimator(struct Peaks const *peaks, double *gamma,
             }
         }
     }
+    // print mini, maxi, mean, gamma, sigma, max_llhood, found, roots
+    printf("[C impl] mini: %.20f, maxi: %.20f, mean: %.20f, gamma: %.20f, sigma: %.20f, max_llhood: %.20f\n",
+           mini, maxi, mean, *gamma, *sigma, max_llhood);
+    printf("[C impl] found: [%d, %d, %d]\n", found[0], found[1], found[2]);
+    printf("[C impl] roots: [%.20f, %.20f, %.20f]\n", roots[0], roots[1], roots[2]);
     return max_llhood;
 }

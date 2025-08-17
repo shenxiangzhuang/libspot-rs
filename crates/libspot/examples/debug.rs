@@ -1,7 +1,7 @@
 //! Test script to directly call the Grimshaw estimators and compare results
 
 use libspot::{Peaks, Ubend};
-use libspot_ffi::ffi;
+// use libspot_ffi::ffi;
 use std::fs::File;
 use std::io::Write;
 use std::os::raw::c_double;

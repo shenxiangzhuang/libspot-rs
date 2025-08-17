@@ -79,9 +79,12 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (Float, Float, Float) {
             }
         }
     }
-    
+    // print mini, maxi, mean, gamma, sigma, max_llhood, found, roots in one line
+    println!("[Rust impl] mini: {:.20}, maxi: {:.20}, mean: {:.20}, gamma: {:.20}, sigma: {:.20}, max_llhood: {:.20}", 
+             mini, maxi, mean, best_gamma, best_sigma, max_llhood);
+    println!("[Rust impl] found: [{}, {}, {}]", found[0], found[1], found[2]);
+    println!("[Rust impl] roots: [{:.20}, {:.20}, {:.20}]", roots[0], roots[1], roots[2]);
 
-    
     (best_gamma, best_sigma, max_llhood)
 }
 
@@ -119,12 +122,12 @@ pub fn compute_log_likelihood(peaks: &Peaks, gamma: Float, sigma: Float) -> Floa
 /// Grimshaw w function for root finding
 fn grimshaw_w(x: Float, peaks: &Peaks) -> Float {
     let nt_local = peaks.size();
-    let mut u = 0.0;
-    let mut v = 0.0;
-    
+    let mut u: Float = 0.0;
+    let mut v: Float = 0.0;
+
     for i in 0..nt_local {
         if let Some(data_i) = peaks.container().get(i) {
-            let s = 1.0 + x * data_i;
+            let s: Float = 1.0 + x * data_i as Float;
             if s <= 0.0 {
                 return f64::NAN as Float; // Invalid
             }
@@ -137,8 +140,11 @@ fn grimshaw_w(x: Float, peaks: &Peaks) -> Float {
         return f64::NAN as Float;
     }
     
-    let nt = nt_local as f64;
-    (u / nt) * (1.0 + v / nt) - 1.0
+    let nt: Float = nt_local as Float;
+    let res = (u / nt) * (1.0 + v / nt) - 1.0;
+    // print x, res, nt
+    println!("[Rust impl] x: {:.20}, res: {:.20}, nt: {:.20}", x, res, nt);
+    res
 }
 
 /// Grimshaw v function
@@ -158,7 +164,10 @@ fn grimshaw_v(x: Float, peaks: &Peaks) -> Float {
 
 /// Compute simplified log likelihood for Grimshaw method
 fn grimshaw_simplified_log_likelihood(x_star: Float, peaks: &Peaks) -> (Float, Float, Float) {
+<<<<<<< HEAD
     // Match C implementation exactly: use exact equality check only
+=======
+>>>>>>> 80ef867 (debug)
     let (gamma, sigma) = if x_star == 0.0 {
         (0.0, peaks.mean())
     } else {
@@ -168,6 +177,8 @@ fn grimshaw_simplified_log_likelihood(x_star: Float, peaks: &Peaks) -> (Float, F
     };
     
     let log_likelihood = compute_log_likelihood(peaks, gamma, sigma);
+    println!("[Rust impl] gamma: {:.15}, sigma: {:.15}, log_likelihood: {:.15}", 
+           gamma, sigma, log_likelihood);
     (gamma, sigma, log_likelihood)
 }
 

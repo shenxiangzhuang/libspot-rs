@@ -35,8 +35,13 @@ pub type Float = c_double;
 
 mod config;
 mod error;
+<<<<<<< HEAD
 mod estimator;
 pub mod math;
+=======
+pub mod estimator;
+mod math;
+>>>>>>> 80ef867 (debug)
 mod p2;
 mod peaks;
 mod spot;

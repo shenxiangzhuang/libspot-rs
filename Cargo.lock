@@ -26,4 +26,5 @@ name = "libspot-ffi"
 version = "2.0.0-beta.4.0"
 dependencies = [
  "libc",
+ "libspot",
 ]
