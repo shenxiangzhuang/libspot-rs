@@ -215,6 +215,11 @@ impl Spot {
         self.tail.peaks().variance()
     }
 
+    /// Get the peaks data as a vector (for debugging and export)
+    pub fn peaks_data(&self) -> Vec<Float> {
+        self.tail.peaks().container().data()
+    }
+
 
 }
 

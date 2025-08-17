@@ -1,0 +1,25 @@
+[package]
+name = "grimshaw_experiment"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+libspot = { path = "../crates/libspot" }
+libc = "0.2"
+
+[[bin]]
+name = "capture_critical_data"
+path = "capture_critical_data.rs"
+
+[[bin]]
+name = "rust_grimshaw"
+path = "rust_grimshaw.rs"
+
+[[bin]]
+name = "c_grimshaw"
+path = "c_grimshaw.rs"
+
+[[bin]]
+name = "comprehensive_comparison"
+path = "comprehensive_comparison.rs"

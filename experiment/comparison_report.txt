@@ -1,0 +1,30 @@
+Grimshaw Estimator Comparison Report
+=====================================
+
+Input Data:
+  Size: 200
+  Mean: 0.766766777376012
+  Min: 0.003817830505861
+  Max: 3.813152398048215
+
+Rust Implementation:
+  Gamma: -0.153730083967611
+  Sigma: 0.883667178278770
+  Log-likelihood: -144.519026727207176
+  Anomaly threshold Z: 8.269205530513512
+
+C Implementation:
+  Gamma: -0.153730083967575
+  Sigma: 0.883667178278730
+  Log-likelihood: -144.519026727205301
+  Anomaly threshold Z: 8.269205530513515
+
+Differences (Rust - C):
+  Gamma: -3.552713678800501e-14
+  Sigma: 3.996802888650564e-14
+  Log-likelihood: -1.875832822406664e-12
+  Z: -3.552713678800501e-15
+
+Expected Z from full SPOT: 8.285563050271193
+Rust deviation from expected: -1.635751975768152e-2
+C deviation from expected: -1.635751975767796e-2
