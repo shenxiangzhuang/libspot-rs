@@ -228,7 +228,7 @@ mod tests {
 
         let p = tail.probability(0.1, 2.0);
         assert!(!p.is_nan());
-        assert!(p >= 0.0 && p <= 0.1);
+        assert!((0.0..=0.1).contains(&p));
     }
 
     #[test]
