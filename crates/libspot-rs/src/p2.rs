@@ -49,9 +49,7 @@ impl P2 {
         }
 
         // Initialize q with the first 5 values
-        for i in 0..5 {
-            self.q[i] = data[i];
-        }
+        self.q.copy_from_slice(&data);
 
         sort5(&mut self.q);
 
