@@ -201,8 +201,8 @@ where
         if (fb > 0.0 && fc > 0.0) || (fb < 0.0 && fc < 0.0) {
             c = a; // Rename a, b, c and adjust bounding interval
             fc = fa;
-            e = b - a; // Match C: e = d = b - a
-            d = e;
+            d = b - a; // Match C exactly: e = d = b - a
+            e = d;
         }
         if fc.abs() < fb.abs() {
             a = b;

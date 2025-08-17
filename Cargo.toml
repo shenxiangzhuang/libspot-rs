@@ -1,7 +1,9 @@
-[workspace]
-members = ["crates/libspot", "crates/libspot-ffi"]
-resolver = "2"
+[package]
+name = "debug_compare"
+version = "0.1.0"
+edition = "2021"
 
-[workspace.dependencies]
+[dependencies]
+libspot = { path = "crates/libspot" }
+libspot-ffi = { path = "crates/libspot-ffi" }
 libc = "0.2"
-approx = "0.5.1"
