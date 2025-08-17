@@ -1,0 +1,82 @@
+name: Test libspot-rs (Pure Rust)
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'crates/libspot-rs/**'
+      - '.github/workflows/test-libspot-rs.yaml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'crates/libspot-rs/**'
+      - '.github/workflows/test-libspot-rs.yaml'
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-libspot-rs:
+    name: Test libspot-rs (Pure Rust implementation)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          crates/libspot-rs/target
+        key: ${{ runner.os }}-libspot-rs-cargo-${{ hashFiles('crates/libspot-rs/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-libspot-rs-cargo-
+
+    - name: Check formatting (libspot-rs)
+      run: |
+        cd crates/libspot-rs
+        cargo fmt --all -- --check
+
+    - name: Run clippy (libspot-rs)
+      run: |
+        cd crates/libspot-rs
+        cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Build libspot-rs
+      run: |
+        cd crates/libspot-rs
+        cargo build --verbose
+
+    - name: Run unit tests (libspot-rs)
+      run: |
+        cd crates/libspot-rs
+        cargo test --lib --verbose
+
+    - name: Run integration tests (libspot-rs)
+      run: |
+        cd crates/libspot-rs
+        cargo test --test pure_rust_basic_example --verbose
+
+    - name: Run validation tests (libspot-rs)
+      run: |
+        cd crates/libspot-rs
+        cargo test --test pure_rust_validation --verbose
+
+    - name: Run doc tests (libspot-rs)
+      run: |
+        cd crates/libspot-rs
+        cargo test --doc --verbose
+
+    - name: Run examples (libspot-rs)
+      run: |
+        cd crates/libspot-rs
+        cargo run --example basic
