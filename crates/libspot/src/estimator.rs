@@ -77,18 +77,6 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
             }
         }
     }
-    // print mini, maxi, mean, gamma, sigma, max_llhood, found, roots in one line
-    println!("[Rust impl] mini: {:.20}, maxi: {:.20}, mean: {:.20}, gamma: {:.20}, sigma: {:.20}, max_llhood: {:.20}",
-             mini, maxi, mean, best_gamma, best_sigma, max_llhood);
-    println!(
-        "[Rust impl] found: [{}, {}, {}]",
-        found[0], found[1], found[2]
-    );
-    println!(
-        "[Rust impl] roots: [{:.20}, {:.20}, {:.20}]",
-        roots[0], roots[1], roots[2]
-    );
-
     (best_gamma, best_sigma, max_llhood)
 }
 
@@ -145,10 +133,7 @@ fn grimshaw_w(x: f64, peaks: &Peaks) -> f64 {
     }
 
     let nt: f64 = nt_local as f64;
-    let res = (u / nt) * (1.0 + v / nt) - 1.0;
-    // print x, res, nt
-    println!("[Rust impl] x: {:.20}, res: {:.20}, nt: {:.20}", x, res, nt);
-    res
+    (u / nt) * (1.0 + v / nt) - 1.0
 }
 
 /// Grimshaw v function
@@ -178,10 +163,6 @@ fn grimshaw_simplified_log_likelihood(x_star: f64, peaks: &Peaks) -> (f64, f64, 
     };
 
     let log_likelihood = compute_log_likelihood(peaks, gamma, sigma);
-    println!(
-        "[Rust impl] gamma: {:.15}, sigma: {:.15}, log_likelihood: {:.15}",
-        gamma, sigma, log_likelihood
-    );
     (gamma, sigma, log_likelihood)
 }
 
