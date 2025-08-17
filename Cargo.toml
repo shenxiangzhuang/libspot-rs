@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+libspot-rs = { path = "crates/libspot-rs" }
 libspot = { path = "crates/libspot" }
-libspot-ffi = { path = "crates/libspot-ffi" }
 libc = "0.2"

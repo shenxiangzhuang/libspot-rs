@@ -16,7 +16,7 @@ This crate provides Rust bindings to the original C implementation of libspot. I
 ## Usage
 
 ```rust,ignore
-use libspot_ffi::{SpotDetector, SpotConfig, SpotStatus};
+use libspot::{SpotDetector, SpotConfig, SpotStatus};
 
 let config = SpotConfig::default();
 let mut detector = SpotDetector::new(config)?;

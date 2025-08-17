@@ -1,5 +1,5 @@
-use libspot::{Spot, SpotConfig as RustConfig, SpotStatus as RustStatus};
-use libspot_ffi::{SpotConfig as FFIConfig, SpotDetector, SpotStatus as FFIStatus};
+use libspot::{SpotConfig as FFIConfig, SpotDetector, SpotStatus as FFIStatus};
+use libspot_rs::{Spot, SpotConfig as RustConfig, SpotStatus as RustStatus};
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
 pub struct CRand;

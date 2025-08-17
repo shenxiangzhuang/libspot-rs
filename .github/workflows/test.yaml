@@ -43,7 +43,7 @@ jobs:
 
     - name: Build C library
       run: |
-        cd libspot
+        cd crates/libspot/libspot
         make clean
         make
 

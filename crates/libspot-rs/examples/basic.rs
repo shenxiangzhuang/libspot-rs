@@ -1,12 +1,13 @@
 //! Basic example demonstrating the libspot library
 //!
-//! This example replicates the C libspot example but using the safe Rust API.
+//! This example replicates the C libspot example but using the pure Rust API.
 //! It performs a comprehensive benchmark with 50 million samples.
 
-use libspot_ffi::{version, SpotConfig, SpotDetector, SpotStatus};
+use libspot_rs::{Spot, SpotConfig, SpotStatus};
 use std::time::Instant;
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
+/// This uses the actual C library functions to ensure identical results
 pub struct CRand;
 
 impl CRand {
@@ -34,8 +35,13 @@ impl CRand {
     }
 }
 
+/// Get pure Rust implementation version
+fn version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Testing libspot from Rust using the safe API!");
+    println!("Testing libspot from Rust using the pure Rust API!");
 
     // Get library version
     let lib_version = version();
@@ -51,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Create and initialize SPOT detector
-    let mut detector = SpotDetector::new(config)?;
+    let mut detector = Spot::new(config)?;
     println!("SPOT detector created successfully");
 
     // Generate initial training data

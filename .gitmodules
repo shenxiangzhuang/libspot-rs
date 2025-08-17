@@ -1,3 +1,3 @@
-[submodule "crates/libspot-ffi/libspot"]
-	path = crates/libspot-ffi/libspot
+[submodule "crates/libspot/libspot"]
+	path = crates/libspot/libspot
 	url = https://github.com/asiffer/libspot.git

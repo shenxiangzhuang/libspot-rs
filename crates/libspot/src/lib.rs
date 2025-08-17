@@ -1,48 +1,30 @@
-//! Pure Rust implementation of the SPOT algorithm for time series anomaly detection
-//!
-//! This crate provides a pure Rust implementation of the SPOT (Streaming Peaks Over Threshold)
-//! algorithm, which is used for anomaly detection in time series data.
-//!
-//! # Key Components
-//!
-//! - [`Ubend`]: Circular buffer for storing data
-//! - [`Peaks`]: Statistics computation over peaks data
-//! - [`Tail`]: Generalized Pareto Distribution tail modeling
-//! - [`Spot`]: Main SPOT detector implementation
-//!
-//! # Usage
-//!
-//! ```rust
-//! use spot_rs::{Spot, SpotConfig};
-//!
-//! let config = SpotConfig {
-//!     q: 0.0001,
-//!     low_tail: false,
-//!     discard_anomalies: true,
-//!     level: 0.998,
-//!     max_excess: 200,
-//! };
-//!
-//! let mut detector = Spot::new(config).unwrap();
-//! // ... use detector
-//! ```
+#![doc = include_str!("../README.md")]
 
+use std::os::raw::{c_char, c_ulong};
+
+// Module declarations
 mod config;
+mod detector;
 mod error;
-mod estimator;
-mod math;
-mod p2;
-mod peaks;
-mod spot;
+pub mod ffi;
 mod status;
-mod tail;
-mod ubend;
 
 // Re-export public types
 pub use config::SpotConfig;
+pub use detector::SpotDetector;
 pub use error::{SpotError, SpotResult};
-pub use peaks::Peaks;
-pub use spot::Spot;
 pub use status::SpotStatus;
-pub use tail::Tail;
-pub use ubend::Ubend;
+
+// Re-export commonly used types
+pub use std::os::raw::c_double as SpotFloat;
+
+/// Get the version of the underlying libspot library
+pub fn version() -> String {
+    let mut buffer = vec![0u8; 256];
+    unsafe {
+        ffi::libspot_version(buffer.as_mut_ptr() as *mut c_char, buffer.len() as c_ulong);
+    }
+    String::from_utf8_lossy(&buffer)
+        .trim_end_matches('\0')
+        .to_string()
+}

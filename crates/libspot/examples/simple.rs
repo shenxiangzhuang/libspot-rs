@@ -2,7 +2,7 @@
 //!
 //! This example shows the minimal code needed to use SPOT for anomaly detection.
 
-use libspot_ffi::{version, SpotConfig, SpotDetector, SpotStatus};
+use libspot::{version, SpotConfig, SpotDetector, SpotStatus};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SPOT Anomaly Detection - Simple Example");
