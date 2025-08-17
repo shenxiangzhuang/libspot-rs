@@ -70,7 +70,12 @@ impl Tail {
             llhood
         };
         
-        if is_nan(max_llhood) || llhood > max_llhood {
+        // Debug the critical case to see which estimator is selected
+        let debug_active = self.peaks.size() == 200 && (self.peaks.mean() - 0.766766777376012).abs() < 1e-10;
+        if debug_active {
+        }
+        
+        if is_nan(max_llhood) || llhood > max_llhood {  // Back to original logic  
             max_llhood = llhood;
             self.gamma = tmp_gamma;
             self.sigma = tmp_sigma;
