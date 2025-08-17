@@ -41,7 +41,6 @@ mod ubend;
 // Re-export public types
 pub use config::SpotConfig;
 pub use error::{SpotError, SpotResult};
-pub use p2::p2_quantile;
 pub use peaks::Peaks;
 pub use spot::Spot;
 pub use status::SpotStatus;
