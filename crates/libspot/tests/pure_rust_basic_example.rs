@@ -51,8 +51,14 @@ fn test_pure_rust_basic_example_behavior() {
 
     // Fit the model
     println!("Fitting with {} data points", initial_data.len());
-    println!("Data range: {} to {}", initial_data.iter().fold(f64::INFINITY, |a, &b| a.min(b)), initial_data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)));
-    
+    println!(
+        "Data range: {} to {}",
+        initial_data.iter().fold(f64::INFINITY, |a, &b| a.min(b)),
+        initial_data
+            .iter()
+            .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
+    );
+
     let fit_result = detector.fit(&initial_data);
     if let Err(e) = &fit_result {
         println!("Fit error: {:?}", e);
@@ -81,13 +87,17 @@ fn test_pure_rust_basic_example_behavior() {
 
     println!("Pure Rust Results after 1000 samples:");
     println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
-    println!("Z={:.6} T={:.6}", detector.anomaly_threshold(), detector.excess_threshold());
+    println!(
+        "Z={:.6} T={:.6}",
+        detector.anomaly_threshold(),
+        detector.excess_threshold()
+    );
 
     // Validate that we get reasonable results
     assert!(anomaly + excess + normal == 1000);
     assert!(!detector.anomaly_threshold().is_nan());
     assert!(!detector.excess_threshold().is_nan());
-    
+
     // The exact values will depend on the algorithm implementation
     // but we should see some distribution of results
     assert!(normal > 0, "Should have some normal classifications");
@@ -134,8 +144,12 @@ fn test_pure_rust_basic_example_larger() {
 
     println!("Pure Rust Results after 100K samples:");
     println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
-    println!("Z={:.6} T={:.6}", detector.anomaly_threshold(), detector.excess_threshold());
-    
+    println!(
+        "Z={:.6} T={:.6}",
+        detector.anomaly_threshold(),
+        detector.excess_threshold()
+    );
+
     // Validate results
     assert_eq!(anomaly + excess + normal, 100_000);
     assert!(!detector.anomaly_threshold().is_nan());

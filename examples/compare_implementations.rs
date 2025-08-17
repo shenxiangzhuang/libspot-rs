@@ -1,5 +1,5 @@
 use libspot::{Spot, SpotConfig as RustConfig, SpotStatus as RustStatus};
-use libspot_ffi::{SpotDetector, SpotConfig as FFIConfig, SpotStatus as FFIStatus};
+use libspot_ffi::{SpotConfig as FFIConfig, SpotDetector, SpotStatus as FFIStatus};
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
 pub struct CRand;
@@ -59,14 +59,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ffi_detector.fit(&training_data)?;
 
     println!("After training:");
-    println!("  Rust Excess threshold: {:.15}", rust_detector.excess_threshold());
-    println!("  FFI  Excess threshold: {:.15}", ffi_detector.excess_threshold());
-    println!("  Rust Anomaly threshold: {:.15}", rust_detector.anomaly_threshold());
-    println!("  FFI  Anomaly threshold: {:.15}", ffi_detector.anomaly_threshold());
+    println!(
+        "  Rust Excess threshold: {:.15}",
+        rust_detector.excess_threshold()
+    );
+    println!(
+        "  FFI  Excess threshold: {:.15}",
+        ffi_detector.excess_threshold()
+    );
+    println!(
+        "  Rust Anomaly threshold: {:.15}",
+        rust_detector.anomaly_threshold()
+    );
+    println!(
+        "  FFI  Anomaly threshold: {:.15}",
+        ffi_detector.anomaly_threshold()
+    );
 
     let excess_diff = (rust_detector.excess_threshold() - ffi_detector.excess_threshold()).abs();
     let anomaly_diff = (rust_detector.anomaly_threshold() - ffi_detector.anomaly_threshold()).abs();
-    
+
     println!("  Excess threshold difference: {:.15}", excess_diff);
     println!("  Anomaly threshold difference: {:.15}", anomaly_diff);
 
@@ -91,17 +103,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let ffi_status_int = match ffi_status {
             FFIStatus::Normal => 0,
-            FFIStatus::Excess => 1, 
+            FFIStatus::Excess => 1,
             FFIStatus::Anomaly => 2,
         };
 
-        println!("  Sample {}: val={:.6} rust={} ffi={} match={}", 
-                 i, val, rust_status_int, ffi_status_int, rust_status_int == ffi_status_int);
+        println!(
+            "  Sample {}: val={:.6} rust={} ffi={} match={}",
+            i,
+            val,
+            rust_status_int,
+            ffi_status_int,
+            rust_status_int == ffi_status_int
+        );
 
         if rust_status_int != ffi_status_int {
             println!("    MISMATCH at sample {}!", i);
-            println!("    Rust Z={:.15} T={:.15}", rust_detector.anomaly_threshold(), rust_detector.excess_threshold());
-            println!("    FFI  Z={:.15} T={:.15}", ffi_detector.anomaly_threshold(), ffi_detector.excess_threshold());
+            println!(
+                "    Rust Z={:.15} T={:.15}",
+                rust_detector.anomaly_threshold(),
+                rust_detector.excess_threshold()
+            );
+            println!(
+                "    FFI  Z={:.15} T={:.15}",
+                ffi_detector.anomaly_threshold(),
+                ffi_detector.excess_threshold()
+            );
             break;
         }
     }

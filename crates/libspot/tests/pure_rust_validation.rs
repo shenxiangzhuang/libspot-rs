@@ -29,7 +29,7 @@ impl CRand {
 #[test]
 fn test_pure_rust_exact_c_behavior_1m_samples() {
     println!("Running pure Rust SPOT implementation test (1M samples)...");
-    
+
     // Configure SPOT detector with exact same parameters as C basic example
     let config = SpotConfig {
         q: 0.0001,               // anomaly probability
@@ -84,14 +84,18 @@ fn test_pure_rust_exact_c_behavior_1m_samples() {
     assert!(t.is_finite(), "Excess threshold should be finite");
 
     // Validate we have some reasonable distribution
-    assert!(normal > 900_000, "Should have mostly normal classifications, got {}", normal);
+    assert!(
+        normal > 900_000,
+        "Should have mostly normal classifications, got {}",
+        normal
+    );
     assert!(excess > 0, "Should have some excess classifications");
-    
+
     // Expected ranges based on C implementation behavior
     // These are approximate ranges since the exact values depend on the random sequence
     assert!(anomaly < 2000, "Anomaly count seems too high: {}", anomaly);
     assert!(excess < 50000, "Excess count seems too high: {}", excess);
-    
+
     println!("✓ Pure Rust SPOT implementation produces valid results!");
 }
 
@@ -135,14 +139,18 @@ fn test_pure_rust_matches_expected_c_pattern() {
 
     println!("Pure Rust Results (10K samples):");
     println!("ANOMALY={} EXCESS={} NORMAL={}", anomaly, excess, normal);
-    println!("Z={:.6} T={:.6}", detector.anomaly_threshold(), detector.excess_threshold());
+    println!(
+        "Z={:.6} T={:.6}",
+        detector.anomaly_threshold(),
+        detector.excess_threshold()
+    );
 
     // Validate basic properties
     assert_eq!(anomaly + excess + normal, 10_000);
-    assert!(normal > 9_500, "Should have mostly normal classifications"); 
+    assert!(normal > 9_500, "Should have mostly normal classifications");
     assert!(!detector.anomaly_threshold().is_nan());
     assert!(!detector.excess_threshold().is_nan());
-    
+
     println!("✓ Pure Rust implementation behaves correctly on smaller dataset!");
 }
 
@@ -157,19 +165,25 @@ fn test_pure_rust_performance() {
     detector.fit(&initial_data).unwrap();
 
     let start = std::time::Instant::now();
-    
+
     // Process 100K samples
     let mut rng = CRand::new(42);
     for _ in 0..100_000 {
         let x = rng.rexp();
         detector.step(x).unwrap();
     }
-    
+
     let duration = start.elapsed();
-    println!("Pure Rust processed 100K samples in {:.2}ms", duration.as_millis());
-    
+    println!(
+        "Pure Rust processed 100K samples in {:.2}ms",
+        duration.as_millis()
+    );
+
     // Should be fast - less than 1 second for 100K samples
-    assert!(duration.as_secs() < 1, "Pure Rust implementation should be fast");
-    
+    assert!(
+        duration.as_secs() < 1,
+        "Pure Rust implementation should be fast"
+    );
+
     println!("✓ Pure Rust implementation has good performance!");
 }

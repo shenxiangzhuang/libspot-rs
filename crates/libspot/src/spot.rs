@@ -4,7 +4,7 @@
 //! that provides real-time anomaly detection for time series data.
 
 use crate::config::SpotConfig;
-use crate::Float;
+
 use crate::error::{SpotError, SpotResult};
 use crate::math::is_nan;
 use crate::p2::p2_quantile;
@@ -15,19 +15,19 @@ use crate::tail::Tail;
 #[derive(Debug)]
 pub struct Spot {
     /// Probability of an anomaly
-    q: Float,
+    q: f64,
     /// Location of the tail (high quantile)
-    level: Float,
+    level: f64,
     /// Flag anomalies (true = flag, false = don't flag)
     discard_anomalies: bool,
     /// Upper/Lower tail choice (true = lower tail, false = upper tail)
     low: bool,
     /// Internal constant (+/- 1.0)
-    up_down: Float,
+    up_down: f64,
     /// Normal/abnormal threshold
-    anomaly_threshold: Float,
-    /// Tail threshold  
-    excess_threshold: Float,
+    anomaly_threshold: f64,
+    /// Tail threshold
+    excess_threshold: f64,
     /// Total number of excesses
     nt: usize,
     /// Total number of seen data
@@ -55,8 +55,8 @@ impl Spot {
             discard_anomalies: config.discard_anomalies,
             low: config.low_tail,
             up_down,
-            anomaly_threshold: f64::NAN as Float,
-            excess_threshold: f64::NAN as Float,
+            anomaly_threshold: f64::NAN,
+            excess_threshold: f64::NAN,
             nt: 0,
             n: 0,
             tail: Tail::new(config.max_excess)?,
@@ -64,7 +64,7 @@ impl Spot {
     }
 
     /// Fit the model using initial training data
-    pub fn fit(&mut self, data: &[Float]) -> SpotResult<()> {
+    pub fn fit(&mut self, data: &[f64]) -> SpotResult<()> {
         // Reset counters
         self.nt = 0;
         self.n = data.len();
@@ -107,13 +107,12 @@ impl Spot {
     }
 
     /// Process a single data point and return its classification
-    pub fn step(&mut self, x: Float) -> SpotResult<SpotStatus> {
+    pub fn step(&mut self, x: f64) -> SpotResult<SpotStatus> {
         if is_nan(x) {
             return Err(SpotError::DataIsNaN);
         }
 
-        if self.discard_anomalies && 
-           (self.up_down * (x - self.anomaly_threshold) > 0.0) {
+        if self.discard_anomalies && (self.up_down * (x - self.anomaly_threshold) > 0.0) {
             return Ok(SpotStatus::Anomaly);
         }
 
@@ -135,32 +134,33 @@ impl Spot {
     }
 
     /// Get the quantile for a given probability
-    pub fn quantile(&self, q: Float) -> Float {
+    pub fn quantile(&self, q: f64) -> f64 {
         if self.n == 0 {
-            return f64::NAN as Float;
+            return f64::NAN;
         }
-        
+
         let s = (self.nt as f64) / (self.n as f64);
         self.excess_threshold + self.up_down * self.tail.quantile(s, q)
     }
 
     /// Get the probability for a given value
-    pub fn probability(&self, z: Float) -> Float {
+    pub fn probability(&self, z: f64) -> f64 {
         if self.n == 0 {
-            return f64::NAN as Float;
+            return f64::NAN;
         }
-        
+
         let s = (self.nt as f64) / (self.n as f64);
-        self.tail.probability(s, self.up_down * (z - self.excess_threshold))
+        self.tail
+            .probability(s, self.up_down * (z - self.excess_threshold))
     }
 
     /// Get the current anomaly threshold
-    pub fn anomaly_threshold(&self) -> Float {
+    pub fn anomaly_threshold(&self) -> f64 {
         self.anomaly_threshold
     }
 
     /// Get the current excess threshold
-    pub fn excess_threshold(&self) -> Float {
+    pub fn excess_threshold(&self) -> f64 {
         self.excess_threshold
     }
 
@@ -186,7 +186,7 @@ impl Spot {
     }
 
     /// Get the current tail parameters
-    pub fn tail_parameters(&self) -> (Float, Float) {
+    pub fn tail_parameters(&self) -> (f64, f64) {
         (self.tail.gamma(), self.tail.sigma())
     }
 
@@ -196,31 +196,29 @@ impl Spot {
     }
 
     /// Get the minimum value in the peaks
-    pub fn peaks_min(&self) -> Float {
+    pub fn peaks_min(&self) -> f64 {
         self.tail.peaks().min()
     }
 
-    /// Get the maximum value in the peaks  
-    pub fn peaks_max(&self) -> Float {
+    /// Get the maximum value in the peaks
+    pub fn peaks_max(&self) -> f64 {
         self.tail.peaks().max()
     }
 
     /// Get the mean of the peaks
-    pub fn peaks_mean(&self) -> Float {
+    pub fn peaks_mean(&self) -> f64 {
         self.tail.peaks().mean()
     }
 
     /// Get the variance of the peaks
-    pub fn peaks_variance(&self) -> Float {
+    pub fn peaks_variance(&self) -> f64 {
         self.tail.peaks().variance()
     }
 
     /// Get the peaks data as a vector (for debugging and export)
-    pub fn peaks_data(&self) -> Vec<Float> {
+    pub fn peaks_data(&self) -> Vec<f64> {
         self.tail.peaks().container().data()
     }
-
-
 }
 
 #[cfg(test)]
@@ -232,7 +230,7 @@ mod tests {
     fn test_spot_creation_valid_config() {
         let config = SpotConfig::default();
         let spot = Spot::new(config).unwrap();
-        
+
         assert_relative_eq!(spot.q, 0.0001);
         assert!(!spot.low);
         assert!(spot.discard_anomalies);
@@ -269,13 +267,13 @@ mod tests {
     fn test_spot_fit_basic() {
         let config = SpotConfig::default();
         let mut spot = Spot::new(config).unwrap();
-        
+
         // Create simple training data
-        let data: Vec<Float> = (0..1000).map(|i| (i as f64 / 1000.0) * 2.0 - 1.0).collect();
-        
+        let data: Vec<f64> = (0..1000).map(|i| (i as f64 / 1000.0) * 2.0 - 1.0).collect();
+
         let result = spot.fit(&data);
         assert!(result.is_ok());
-        
+
         // After fit, thresholds should be valid
         assert!(!is_nan(spot.anomaly_threshold()));
         assert!(!is_nan(spot.excess_threshold()));
@@ -289,11 +287,11 @@ mod tests {
     fn test_spot_step_normal() {
         let config = SpotConfig::default();
         let mut spot = Spot::new(config).unwrap();
-        
+
         // Fit with simple data
-        let data: Vec<Float> = (0..100).map(|i| i as f64).collect();
+        let data: Vec<f64> = (0..100).map(|i| i as f64).collect();
         spot.fit(&data).unwrap();
-        
+
         // Test normal value
         let result = spot.step(50.0);
         assert!(result.is_ok());
@@ -304,8 +302,8 @@ mod tests {
     fn test_spot_step_nan() {
         let config = SpotConfig::default();
         let mut spot = Spot::new(config).unwrap();
-        
-        let result = spot.step(f64::NAN as Float);
+
+        let result = spot.step(f64::NAN);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), SpotError::DataIsNaN);
     }
@@ -317,7 +315,7 @@ mod tests {
             ..SpotConfig::default()
         };
         let spot = Spot::new(config).unwrap();
-        
+
         assert!(spot.low);
         assert_relative_eq!(spot.up_down, -1.0);
     }
@@ -331,13 +329,16 @@ mod tests {
             level: 0.99,
             max_excess: 100,
         };
-        
+
         let spot = Spot::new(original_config.clone()).unwrap();
         let retrieved_config = spot.config();
-        
+
         assert_relative_eq!(retrieved_config.q, original_config.q);
         assert_eq!(retrieved_config.low_tail, original_config.low_tail);
-        assert_eq!(retrieved_config.discard_anomalies, original_config.discard_anomalies);
+        assert_eq!(
+            retrieved_config.discard_anomalies,
+            original_config.discard_anomalies
+        );
         assert_relative_eq!(retrieved_config.level, original_config.level);
         assert_eq!(retrieved_config.max_excess, original_config.max_excess);
     }
@@ -346,16 +347,16 @@ mod tests {
     fn test_spot_quantile_probability_consistency() {
         let config = SpotConfig::default();
         let mut spot = Spot::new(config).unwrap();
-        
+
         // Fit with some data
-        let data: Vec<Float> = (1..=100).map(|i| i as f64).collect();
+        let data: Vec<f64> = (1..=100).map(|i| i as f64).collect();
         spot.fit(&data).unwrap();
-        
+
         // Test quantile function
         let q = spot.quantile(0.01);
         assert!(!is_nan(q));
         assert!(q.is_finite());
-        
+
         // Test probability function
         let p = spot.probability(q);
         assert!(!is_nan(p));
@@ -369,17 +370,17 @@ mod tests {
             ..SpotConfig::default()
         };
         let mut spot = Spot::new(config).unwrap();
-        
+
         // Fit with data range 0-100
-        let data: Vec<Float> = (0..100).map(|i| i as f64).collect();
+        let data: Vec<f64> = (0..100).map(|i| i as f64).collect();
         spot.fit(&data).unwrap();
-        
+
         let _initial_nt = spot.nt();
-        
+
         // Add a value that should be an excess
         let result = spot.step(95.0);
         assert!(result.is_ok());
-        
+
         // Check that we got some classification
         match result.unwrap() {
             SpotStatus::Normal | SpotStatus::Excess | SpotStatus::Anomaly => {

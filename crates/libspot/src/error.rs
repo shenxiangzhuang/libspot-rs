@@ -52,7 +52,7 @@ impl SpotError {
         }
     }
 
-    /// Get error code  
+    /// Get error code
     pub fn code(&self) -> i32 {
         *self as i32
     }
@@ -82,18 +82,30 @@ mod tests {
 
     #[test]
     fn test_from_code() {
-        assert_eq!(SpotError::from_code(-1000), SpotError::MemoryAllocationFailed);
+        assert_eq!(
+            SpotError::from_code(-1000),
+            SpotError::MemoryAllocationFailed
+        );
         assert_eq!(SpotError::from_code(-1001), SpotError::LevelOutOfBounds);
         assert_eq!(SpotError::from_code(-1002), SpotError::QOutOfBounds);
         assert_eq!(SpotError::from_code(-1003), SpotError::ExcessThresholdIsNaN);
-        assert_eq!(SpotError::from_code(-1004), SpotError::AnomalyThresholdIsNaN);
+        assert_eq!(
+            SpotError::from_code(-1004),
+            SpotError::AnomalyThresholdIsNaN
+        );
         assert_eq!(SpotError::from_code(-1005), SpotError::DataIsNaN);
     }
 
     #[test]
     fn test_error_messages() {
-        assert_eq!(SpotError::MemoryAllocationFailed.message(), "Memory allocation failed");
-        assert_eq!(SpotError::LevelOutOfBounds.message(), "The level parameter is out of bounds (it must be between 0 and 1, but close to 1)");
+        assert_eq!(
+            SpotError::MemoryAllocationFailed.message(),
+            "Memory allocation failed"
+        );
+        assert_eq!(
+            SpotError::LevelOutOfBounds.message(),
+            "The level parameter is out of bounds (it must be between 0 and 1, but close to 1)"
+        );
     }
 
     #[test]

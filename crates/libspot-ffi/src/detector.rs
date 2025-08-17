@@ -133,38 +133,36 @@ impl SpotDetector {
         if !self.initialized {
             return 0;
         }
-        
+
         unsafe {
             let spot_ref = &*self.raw.as_ptr();
             spot_ref.n
         }
     }
-    
+
     /// Get the total number of excesses
     pub fn nt(&self) -> u64 {
         if !self.initialized {
             return 0;
         }
-        
+
         unsafe {
             let spot_ref = &*self.raw.as_ptr();
             spot_ref.nt
         }
     }
-    
+
     /// Get the current tail parameters
     pub fn tail_parameters(&self) -> (f64, f64) {
         if !self.initialized {
             return (f64::NAN, f64::NAN);
         }
-        
+
         unsafe {
             let spot_ref = &*self.raw.as_ptr();
             (spot_ref.tail.gamma, spot_ref.tail.sigma)
         }
     }
-
-
 }
 
 impl Drop for SpotDetector {

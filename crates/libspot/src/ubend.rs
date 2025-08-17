@@ -1,11 +1,10 @@
 //! Circular buffer implementation (Ubend)
-//! 
+//!
 //! This module implements a circular buffer that matches the C implementation exactly.
 //! The Ubend structure is a kind of circular vector that starts empty, fills up to capacity,
 //! and then overwrites older data with newer data.
 
 use crate::error::{SpotError, SpotResult};
-use crate::Float;
 
 /// Circular buffer implementation that matches the C Ubend structure
 #[derive(Debug, Clone)]
@@ -15,11 +14,11 @@ pub struct Ubend {
     /// Maximum storage capacity
     capacity: usize,
     /// Last erased value (i.e., replaced by a new one)
-    last_erased_data: Float,
+    last_erased_data: f64,
     /// Container fill status (true = filled, false = not filled)
     filled: bool,
     /// Data container
-    data: Vec<Float>,
+    data: Vec<f64>,
 }
 
 impl Ubend {
@@ -28,12 +27,12 @@ impl Ubend {
         if capacity == 0 {
             return Err(SpotError::MemoryAllocationFailed);
         }
-        
+
         Ok(Self {
             cursor: 0,
             filled: false,
             capacity,
-            last_erased_data: f64::NAN as Float,
+            last_erased_data: f64::NAN,
             data: vec![0.0; capacity],
         })
     }
@@ -50,7 +49,7 @@ impl Ubend {
 
     /// Push a new value into the container
     /// Returns the value that was erased (if any), otherwise NaN
-    pub fn push(&mut self, x: Float) -> Float {
+    pub fn push(&mut self, x: f64) -> f64 {
         // If the container has already been filled, we must keep in memory
         // the data we will erase
         if self.filled {
@@ -80,12 +79,12 @@ impl Ubend {
     }
 
     /// Get the data at a specific index in insertion order
-    pub fn get(&self, index: usize) -> Option<Float> {
+    pub fn get(&self, index: usize) -> Option<f64> {
         let size = self.size();
         if index >= size {
             return None;
         }
-        
+
         if !self.filled {
             // Simple case: data is contiguous from 0 to cursor-1
             Some(self.data[index])
@@ -97,7 +96,7 @@ impl Ubend {
     }
 
     /// Access to raw data (for compatibility with C implementation)
-    pub fn raw_data(&self) -> &[Float] {
+    pub fn raw_data(&self) -> &[f64] {
         &self.data
     }
 
@@ -117,12 +116,12 @@ impl Ubend {
     }
 
     /// Get last erased data
-    pub fn last_erased_data(&self) -> Float {
+    pub fn last_erased_data(&self) -> f64 {
         self.last_erased_data
     }
 
     /// Get all data in insertion order as a vector
-    pub fn data(&self) -> Vec<Float> {
+    pub fn data(&self) -> Vec<f64> {
         self.iter().collect()
     }
 }
@@ -134,7 +133,7 @@ pub struct UbendIterator<'a> {
 }
 
 impl<'a> Iterator for UbendIterator<'a> {
-    type Item = Float;
+    type Item = f64;
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = self.ubend.get(self.index);
@@ -152,8 +151,8 @@ impl<'a> ExactSizeIterator for UbendIterator<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_relative_eq;
     use crate::math::is_nan;
+    use approx::assert_relative_eq;
 
     #[test]
     fn test_ubend_creation() {
@@ -175,7 +174,7 @@ mod tests {
     #[test]
     fn test_ubend_push_before_full() {
         let mut ubend = Ubend::new(3).unwrap();
-        
+
         // Push first element
         let erased = ubend.push(1.0);
         assert!(is_nan(erased));
@@ -201,12 +200,12 @@ mod tests {
     #[test]
     fn test_ubend_push_after_full() {
         let mut ubend = Ubend::new(3).unwrap();
-        
+
         // Fill the buffer
         ubend.push(1.0);
         ubend.push(2.0);
         ubend.push(3.0);
-        
+
         // Now it should start overwriting
         let erased = ubend.push(4.0);
         assert_relative_eq!(erased, 1.0);
@@ -224,22 +223,22 @@ mod tests {
     #[test]
     fn test_ubend_get() {
         let mut ubend = Ubend::new(3).unwrap();
-        
+
         // Test empty buffer
         assert!(ubend.get(0).is_none());
-        
+
         // Add some data
         ubend.push(10.0);
         ubend.push(20.0);
-        
+
         assert_relative_eq!(ubend.get(0).unwrap(), 10.0);
         assert_relative_eq!(ubend.get(1).unwrap(), 20.0);
         assert!(ubend.get(2).is_none());
-        
+
         // Fill buffer and test wraparound
         ubend.push(30.0);
         ubend.push(40.0); // This should overwrite 10.0
-        
+
         assert_relative_eq!(ubend.get(0).unwrap(), 20.0);
         assert_relative_eq!(ubend.get(1).unwrap(), 30.0);
         assert_relative_eq!(ubend.get(2).unwrap(), 40.0);
@@ -248,33 +247,33 @@ mod tests {
     #[test]
     fn test_ubend_iterator() {
         let mut ubend = Ubend::new(3).unwrap();
-        
+
         ubend.push(1.0);
         ubend.push(2.0);
         ubend.push(3.0);
-        
-        let values: Vec<Float> = ubend.iter().collect();
+
+        let values: Vec<f64> = ubend.iter().collect();
         assert_eq!(values, vec![1.0, 2.0, 3.0]);
-        
+
         // Test after wraparound
         ubend.push(4.0);
-        let values: Vec<Float> = ubend.iter().collect();
+        let values: Vec<f64> = ubend.iter().collect();
         assert_eq!(values, vec![2.0, 3.0, 4.0]);
     }
 
     #[test]
     fn test_ubend_exact_size_iterator() {
         let mut ubend = Ubend::new(3).unwrap();
-        
+
         assert_eq!(ubend.iter().len(), 0);
-        
+
         ubend.push(1.0);
         assert_eq!(ubend.iter().len(), 1);
-        
+
         ubend.push(2.0);
         ubend.push(3.0);
         assert_eq!(ubend.iter().len(), 3);
-        
+
         ubend.push(4.0);
         assert_eq!(ubend.iter().len(), 3);
     }

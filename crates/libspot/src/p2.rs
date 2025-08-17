@@ -4,24 +4,22 @@
 //! the C implementation exactly. The P² algorithm is used to estimate quantiles
 //! in a single pass through the data.
 
-use crate::Float;
-
 /// P2 quantile estimator structure
 #[derive(Debug)]
 struct P2 {
     /// Quantile values at the 5 markers
-    q: [Float; 5],
+    q: [f64; 5],
     /// Marker positions
-    n: [Float; 5],
+    n: [f64; 5],
     /// Desired marker positions
-    np: [Float; 5],
+    np: [f64; 5],
     /// Increments for desired positions
-    dn: [Float; 5],
+    dn: [f64; 5],
 }
 
 impl P2 {
     /// Initialize P2 estimator for given probability p
-    fn new(p: Float) -> Self {
+    fn new(p: f64) -> Self {
         let mut p2 = Self {
             q: [0.0; 5],
             n: [0.0, 1.0, 2.0, 3.0, 4.0],
@@ -43,9 +41,9 @@ impl P2 {
     }
 
     /// Compute quantile from data array
-    fn quantile(&mut self, data: &[Float]) -> Float {
+    fn quantile(&mut self, data: &[f64]) -> f64 {
         let size = data.len();
-        
+
         if size < 5 {
             return 0.0;
         }
@@ -91,8 +89,9 @@ impl P2 {
                 // Update other markers (1, 2, 3)
                 for i in 1..4 {
                     let d = self.np[i] - self.n[i];
-                    if (d >= 1.0 && (self.n[i + 1] - self.n[i]) > 1.0) ||
-                       (d <= -1.0 && (self.n[i - 1] - self.n[i]) < -1.0) {
+                    if (d >= 1.0 && (self.n[i + 1] - self.n[i]) > 1.0)
+                        || (d <= -1.0 && (self.n[i - 1] - self.n[i]) < -1.0)
+                    {
                         let d_sign = sign(d);
                         let mut qp = self.parabolic(i, d_sign as i32);
                         if !(self.q[i - 1] < qp && qp < self.q[i + 1]) {
@@ -102,7 +101,7 @@ impl P2 {
                         self.n[i] += d_sign;
                     }
                 }
-                
+
                 k
             };
         }
@@ -111,24 +110,25 @@ impl P2 {
     }
 
     /// Linear interpolation
-    fn linear(&self, i: usize, d: i32) -> Float {
+    fn linear(&self, i: usize, d: i32) -> f64 {
         let i_d = (i as i32 + d) as usize;
         self.q[i] + (d as f64) * (self.q[i_d] - self.q[i]) / (self.n[i_d] - self.n[i])
     }
 
     /// Parabolic interpolation
-    fn parabolic(&self, i: usize, d: i32) -> Float {
+    fn parabolic(&self, i: usize, d: i32) -> f64 {
         let d_f = d as f64;
-        self.q[i] + (d_f / (self.n[i + 1] - self.n[i - 1])) *
-            ((self.n[i] - self.n[i - 1] + d_f) * (self.q[i + 1] - self.q[i]) /
-                (self.n[i + 1] - self.n[i]) +
-             (self.n[i + 1] - self.n[i] - d_f) * (self.q[i] - self.q[i - 1]) /
-                (self.n[i] - self.n[i - 1]))
+        self.q[i]
+            + (d_f / (self.n[i + 1] - self.n[i - 1]))
+                * ((self.n[i] - self.n[i - 1] + d_f) * (self.q[i + 1] - self.q[i])
+                    / (self.n[i + 1] - self.n[i])
+                    + (self.n[i + 1] - self.n[i] - d_f) * (self.q[i] - self.q[i - 1])
+                        / (self.n[i] - self.n[i - 1]))
     }
 }
 
 /// Sign function
-fn sign(d: Float) -> Float {
+fn sign(d: f64) -> f64 {
     if d > 0.0 {
         1.0
     } else if d < 0.0 {
@@ -140,7 +140,7 @@ fn sign(d: Float) -> Float {
 
 /// Sort 5 elements using optimal sorting network
 /// This exactly matches the C implementation
-fn sort5(a: &mut [Float; 5]) {
+fn sort5(a: &mut [f64; 5]) {
     // Compare 1st and 2nd element
     if a[1] < a[0] {
         a.swap(0, 1);
@@ -198,7 +198,7 @@ fn sort5(a: &mut [Float; 5]) {
 
 /// Compute the p-quantile of the data using P2 algorithm
 /// This is the main public function that matches the C API
-pub fn p2_quantile(p: Float, data: &[Float]) -> Float {
+pub fn p2_quantile(p: f64, data: &[f64]) -> f64 {
     let mut p2 = P2::new(p);
     p2.quantile(data)
 }
@@ -244,12 +244,12 @@ mod tests {
     #[test]
     #[ignore] // P2 algorithm has known issues with quantile calculation
     fn test_p2_quantile_quartiles() {
-        let data: Vec<Float> = (1..=100).map(|x| x as f64).collect();
-        
+        let data: Vec<f64> = (1..=100).map(|x| x as f64).collect();
+
         // Test first quartile (25th percentile)
         let q1 = p2_quantile(0.25, &data);
         assert!((q1 - 25.0).abs() < 25.0); // Allow significant approximation error
-        
+
         // Test third quartile (75th percentile)
         let q3 = p2_quantile(0.75, &data);
         assert!((q3 - 75.0).abs() < 25.0); // Allow significant approximation error
@@ -266,7 +266,7 @@ mod tests {
     #[ignore] // P2 algorithm has known issues with quantile calculation
     fn test_p2_level_0_998() {
         // Test with level similar to what SPOT uses
-        let data: Vec<Float> = (1..=1000).map(|x| x as f64).collect();
+        let data: Vec<f64> = (1..=1000).map(|x| x as f64).collect();
         let result = p2_quantile(0.998, &data);
         // For 99.8th percentile of 1-1000, expect around 998
         assert!((result - 998.0).abs() < 100.0); // Very relaxed tolerance

@@ -6,7 +6,7 @@
 //! # Key Components
 //!
 //! - [`Ubend`]: Circular buffer for storing data
-//! - [`Peaks`]: Statistics computation over peaks data  
+//! - [`Peaks`]: Statistics computation over peaks data
 //! - [`Tail`]: Generalized Pareto Distribution tail modeling
 //! - [`Spot`]: Main SPOT detector implementation
 //!
@@ -22,26 +22,15 @@
 //!     level: 0.998,
 //!     max_excess: 200,
 //! };
-//! 
+//!
 //! let mut detector = Spot::new(config).unwrap();
 //! // ... use detector
 //! ```
 
-use std::os::raw::c_double;
-
-/// Type alias for floating-point values to ensure C compatibility
-/// Using c_double throughout eliminates precision differences with C implementation
-pub type Float = c_double;
-
 mod config;
 mod error;
-<<<<<<< HEAD
 mod estimator;
-pub mod math;
-=======
-pub mod estimator;
 mod math;
->>>>>>> 80ef867 (debug)
 mod p2;
 mod peaks;
 mod spot;
@@ -52,9 +41,9 @@ mod ubend;
 // Re-export public types
 pub use config::SpotConfig;
 pub use error::{SpotError, SpotResult};
+pub use p2::p2_quantile;
+pub use peaks::Peaks;
 pub use spot::Spot;
 pub use status::SpotStatus;
-pub use ubend::Ubend;
-pub use peaks::Peaks;
 pub use tail::Tail;
-pub use p2::p2_quantile;
+pub use ubend::Ubend;
