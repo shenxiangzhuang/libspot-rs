@@ -61,16 +61,11 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (Float, Float, Float) {
         found[2] = true;
     }
     
-    // Debug logging for root finding results
-    if std::env::var("SPOT_DEBUG_GRIMSHAW").is_ok() {
-        println!("Grimshaw roots: found=[{}, {}, {}], roots=[{:.15}, {:.15}, {:.15}]", 
-                 found[0], found[1], found[2], roots[0], roots[1], roots[2]);
-    }
+
     
     // Compare all roots (exact C implementation logic)
     let (mut best_gamma, mut best_sigma, mut max_llhood) = 
         grimshaw_simplified_log_likelihood(roots[0], peaks);
-    let mut best_root_index = 0;
     
     // Check other roots
     for k in 1..3 {
@@ -81,19 +76,11 @@ pub fn grimshaw_estimator(peaks: &Peaks) -> (Float, Float, Float) {
                 max_llhood = llhood;
                 best_gamma = tmp_gamma;
                 best_sigma = tmp_sigma;
-                best_root_index = k;
             }
         }
     }
     
-    // Debug logging for final selection
-    if std::env::var("SPOT_DEBUG_GRIMSHAW").is_ok() {
-        // Only log when there's a change or at key intervals
-        println!("Grimshaw selected: root_index={}, gamma={:.15}, sigma={:.15}, llhood={:.15}",
-                 best_root_index, best_gamma, best_sigma, max_llhood);
-    } else if std::env::var("SPOT_DEBUG_FINAL").is_ok() {
-        println!("Final Grimshaw: gamma={:.15}, sigma={:.15}", best_gamma, best_sigma);
-    }
+
     
     (best_gamma, best_sigma, max_llhood)
 }

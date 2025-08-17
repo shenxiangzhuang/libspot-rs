@@ -215,55 +215,7 @@ impl Spot {
         self.tail.peaks().variance()
     }
 
-    /// Get current excess values for debugging
-    pub fn get_excess_values(&self) -> Vec<Float> {
-        self.tail.peaks().container().data()
-    }
 
-    /// Get statistics for debugging
-    pub fn get_statistics(&self) -> (u64, u64, u64) {
-        let anomaly_count = 0u64; // We don't track this in the current implementation
-        let excess_count = self.nt as u64;
-        let normal_count = (self.n - self.nt) as u64;
-        (anomaly_count, excess_count, normal_count)
-    }
-
-    /// Get GPD parameters for debugging  
-    pub fn get_gpd_parameters(&self) -> (Float, Float) {
-        (self.tail.gamma(), self.tail.sigma())
-    }
-
-    /// Call the Grimshaw estimator directly with given excess values for debugging
-    pub fn call_grimshaw_estimator_with_data(&self, excess_values: &[Float]) -> (Float, Float, Float) {
-        use crate::peaks::Peaks;
-        use crate::estimator::grimshaw_estimator;
-        
-        // Create a temporary peaks structure with the given data
-        let mut temp_peaks = match Peaks::new(excess_values.len()) {
-            Ok(peaks) => peaks,
-            Err(_) => return (f64::NAN as Float, f64::NAN as Float, f64::NAN as Float),
-        };
-        
-        // Add all values to the peaks
-        for &value in excess_values {
-            temp_peaks.push(value);
-        }
-        
-        // Call the Grimshaw estimator
-        grimshaw_estimator(&temp_peaks)
-    }
-
-    /// Get detailed peaks statistics for debugging
-    pub fn get_peaks_stats(&self) -> (Float, Float, Float, Float, usize) {
-        let peaks = self.tail.peaks();
-        (
-            peaks.mean(),
-            peaks.variance(), 
-            peaks.min(),
-            peaks.max(),
-            peaks.container().size()
-        )
-    }
 }
 
 #[cfg(test)]
