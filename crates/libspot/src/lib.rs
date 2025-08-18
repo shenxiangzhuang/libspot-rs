@@ -6,7 +6,7 @@ use std::os::raw::{c_char, c_ulong};
 mod config;
 mod detector;
 mod error;
-pub mod ffi;
+mod ffi;
 mod status;
 
 // Re-export public types

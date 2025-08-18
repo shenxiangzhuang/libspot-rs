@@ -12,7 +12,7 @@ use crate::tail::Tail;
 
 /// Main SPOT detector for streaming anomaly detection
 #[derive(Debug)]
-pub struct Spot {
+pub struct SpotDetector {
     /// Probability of an anomaly
     q: f64,
     /// Location of the tail (high quantile)
@@ -35,7 +35,7 @@ pub struct Spot {
     tail: Tail,
 }
 
-impl Spot {
+impl SpotDetector {
     /// Create a new SPOT detector with the given configuration
     pub fn new(config: SpotConfig) -> SpotResult<Self> {
         // Validate parameters
@@ -106,19 +106,19 @@ impl Spot {
     }
 
     /// Process a single data point and return its classification
-    pub fn step(&mut self, x: f64) -> SpotResult<SpotStatus> {
-        if x.is_nan() {
+    pub fn step(&mut self, value: f64) -> SpotResult<SpotStatus> {
+        if value.is_nan() {
             return Err(SpotError::DataIsNaN);
         }
 
-        if self.discard_anomalies && (self.up_down * (x - self.anomaly_threshold) > 0.0) {
+        if self.discard_anomalies && (self.up_down * (value - self.anomaly_threshold) > 0.0) {
             return Ok(SpotStatus::Anomaly);
         }
 
         // Increment number of data (without the anomalies)
         self.n += 1;
 
-        let ex = self.up_down * (x - self.excess_threshold);
+        let ex = self.up_down * (value - self.excess_threshold);
         if ex >= 0.0 {
             // Increment number of excesses
             self.nt += 1;
@@ -164,14 +164,14 @@ impl Spot {
     }
 
     /// Get the current configuration (reconstructed)
-    pub fn config(&self) -> SpotConfig {
-        SpotConfig {
+    pub fn config(&self) -> Option<SpotConfig> {
+        Some(SpotConfig {
             q: self.q,
             low_tail: self.low,
             discard_anomalies: self.discard_anomalies,
             level: self.level,
             max_excess: self.tail.peaks().container().capacity(),
-        }
+        })
     }
 
     /// Get the total number of data points seen
@@ -228,7 +228,7 @@ mod tests {
     #[test]
     fn test_spot_creation_valid_config() {
         let config = SpotConfig::default();
-        let spot = Spot::new(config).unwrap();
+        let spot = SpotDetector::new(config).unwrap();
 
         assert_relative_eq!(spot.q, 0.0001);
         assert!(!spot.low);
@@ -246,7 +246,7 @@ mod tests {
             level: 1.5, // Invalid
             ..SpotConfig::default()
         };
-        let result = Spot::new(config);
+        let result = SpotDetector::new(config);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), SpotError::LevelOutOfBounds);
     }
@@ -257,7 +257,7 @@ mod tests {
             q: 0.5, // Too high for level 0.998
             ..SpotConfig::default()
         };
-        let result = Spot::new(config);
+        let result = SpotDetector::new(config);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), SpotError::QOutOfBounds);
     }
@@ -265,7 +265,7 @@ mod tests {
     #[test]
     fn test_spot_fit_basic() {
         let config = SpotConfig::default();
-        let mut spot = Spot::new(config).unwrap();
+        let mut spot = SpotDetector::new(config).unwrap();
 
         // Create simple training data
         let data: Vec<f64> = (0..1000).map(|i| (i as f64 / 1000.0) * 2.0 - 1.0).collect();
@@ -285,7 +285,7 @@ mod tests {
     #[test]
     fn test_spot_step_normal() {
         let config = SpotConfig::default();
-        let mut spot = Spot::new(config).unwrap();
+        let mut spot = SpotDetector::new(config).unwrap();
 
         // Fit with simple data
         let data: Vec<f64> = (0..100).map(|i| i as f64).collect();
@@ -300,7 +300,7 @@ mod tests {
     #[test]
     fn test_spot_step_nan() {
         let config = SpotConfig::default();
-        let mut spot = Spot::new(config).unwrap();
+        let mut spot = SpotDetector::new(config).unwrap();
 
         let result = spot.step(f64::NAN);
         assert!(result.is_err());
@@ -313,7 +313,7 @@ mod tests {
             low_tail: true,
             ..SpotConfig::default()
         };
-        let spot = Spot::new(config).unwrap();
+        let spot = SpotDetector::new(config).unwrap();
 
         assert!(spot.low);
         assert_relative_eq!(spot.up_down, -1.0);
@@ -329,8 +329,8 @@ mod tests {
             max_excess: 100,
         };
 
-        let spot = Spot::new(original_config.clone()).unwrap();
-        let retrieved_config = spot.config();
+        let spot = SpotDetector::new(original_config.clone()).unwrap();
+        let retrieved_config = spot.config().unwrap();
 
         assert_relative_eq!(retrieved_config.q, original_config.q);
         assert_eq!(retrieved_config.low_tail, original_config.low_tail);
@@ -345,7 +345,7 @@ mod tests {
     #[test]
     fn test_spot_quantile_probability_consistency() {
         let config = SpotConfig::default();
-        let mut spot = Spot::new(config).unwrap();
+        let mut spot = SpotDetector::new(config).unwrap();
 
         // Fit with some data
         let data: Vec<f64> = (1..=100).map(|i| i as f64).collect();
@@ -368,7 +368,7 @@ mod tests {
             level: 0.9, // Lower level for easier testing
             ..SpotConfig::default()
         };
-        let mut spot = Spot::new(config).unwrap();
+        let mut spot = SpotDetector::new(config).unwrap();
 
         // Fit with data range 0-100
         let data: Vec<f64> = (0..100).map(|i| i as f64).collect();

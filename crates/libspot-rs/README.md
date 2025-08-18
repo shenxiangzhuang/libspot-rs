@@ -23,12 +23,12 @@ cargo add libspot-rs
 ## Quick Start
 
 ```rust
-use libspot_rs::{Spot, SpotConfig, SpotStatus};
+use libspot_rs::{SpotDetector, SpotConfig, SpotStatus};
 
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Create detector with default configuration
 let config = SpotConfig::default();
-let mut detector = Spot::new(config)?;
+let mut detector = SpotDetector::new(config)?;
 
 // Fit with training data (normal distribution around 5.0)
 let training_data: Vec<f64> = (0..1000)
@@ -68,7 +68,7 @@ let config = SpotConfig {
 ### Custom Configuration
 
 ```rust
-use libspot_rs::{Spot, SpotConfig};
+use libspot_rs::{SpotDetector, SpotConfig};
 
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
 // More sensitive detector (lower anomaly threshold)
@@ -78,7 +78,7 @@ let sensitive_config = SpotConfig {
     ..SpotConfig::default()
 };
 
-let mut detector = Spot::new(sensitive_config)?;
+let mut detector = SpotDetector::new(sensitive_config)?;
 # Ok(())
 # }
 ```
@@ -86,7 +86,7 @@ let mut detector = Spot::new(sensitive_config)?;
 ### Monitoring Multiple Metrics
 
 ```rust
-use libspot_rs::{Spot, SpotConfig};
+use libspot_rs::{SpotDetector, SpotConfig};
 
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
 # let cpu_history = vec![1.0, 2.0, 3.0];
@@ -96,9 +96,9 @@ use libspot_rs::{Spot, SpotConfig};
 # fn get_memory_usage() -> f64 { 1.0 }
 # fn get_network_usage() -> f64 { 1.0 }
 // Create separate detectors for different metrics
-let mut cpu_detector = Spot::new(SpotConfig::default())?;
-let mut memory_detector = Spot::new(SpotConfig::default())?;
-let mut network_detector = Spot::new(SpotConfig::default())?;
+let mut cpu_detector = SpotDetector::new(SpotConfig::default())?;
+let mut memory_detector = SpotDetector::new(SpotConfig::default())?;
+let mut network_detector = SpotDetector::new(SpotConfig::default())?;
 
 // Train each detector with historical data
 cpu_detector.fit(&cpu_history)?;
@@ -121,9 +121,9 @@ for _ in 0..3 { // Limited loop for doctest
 ### Accessing Detector State
 
 ```rust
-# use libspot_rs::{Spot, SpotConfig};
+# use libspot_rs::{SpotDetector, SpotConfig};
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
-# let mut detector = Spot::new(SpotConfig::default())?;
+# let mut detector = SpotDetector::new(SpotConfig::default())?;
 # let training_data = vec![1.0, 2.0, 3.0];
 # detector.fit(&training_data)?;
 // Get detector statistics
@@ -159,7 +159,7 @@ Key concepts:
 
 ## Key Components
 
-- [`Spot`]: Main SPOT detector implementation
+- [`SpotDetector`]: Main SPOT detector implementation
 - [`SpotConfig`]: Configuration parameters for the detector
 - [`SpotStatus`]: Status returned by the detector for each data point
 - [`Ubend`]: Circular buffer for storing data

@@ -129,26 +129,26 @@ impl SpotDetector {
     }
 
     /// Get the total number of data points seen
-    pub fn n(&self) -> u64 {
+    pub fn n(&self) -> usize {
         if !self.initialized {
             return 0;
         }
 
         unsafe {
             let spot_ref = &*self.raw.as_ptr();
-            spot_ref.n
+            spot_ref.n as usize
         }
     }
 
     /// Get the total number of excesses
-    pub fn nt(&self) -> u64 {
+    pub fn nt(&self) -> usize {
         if !self.initialized {
             return 0;
         }
 
         unsafe {
             let spot_ref = &*self.raw.as_ptr();
-            spot_ref.nt
+            spot_ref.nt as usize
         }
     }
 

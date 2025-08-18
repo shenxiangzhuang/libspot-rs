@@ -15,7 +15,15 @@ mod ubend;
 pub use config::SpotConfig;
 pub use error::{SpotError, SpotResult};
 pub use peaks::Peaks;
-pub use spot::Spot;
+pub use spot::SpotDetector;
 pub use status::SpotStatus;
 pub use tail::Tail;
 pub use ubend::Ubend;
+
+// Re-export commonly used types to match libspot crate
+pub use f64 as SpotFloat;
+
+/// Get the version of the pure Rust libspot implementation
+pub fn version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}

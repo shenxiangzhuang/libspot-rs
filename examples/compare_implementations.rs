@@ -1,5 +1,12 @@
-use libspot::{SpotConfig as FFIConfig, SpotDetector, SpotStatus as FFIStatus};
-use libspot_rs::{Spot, SpotConfig as RustConfig, SpotStatus as RustStatus};
+//! Comparison example demonstrating interchangeable APIs
+//!
+//! This example shows that both libspot and libspot-rs can be used
+//! with exactly the same API, just changing the crate import.
+
+use libspot::{SpotConfig as FFIConfig, SpotDetector as FFIDetector, SpotStatus as FFIStatus};
+use libspot_rs::{
+    SpotConfig as RustConfig, SpotDetector as RustDetector, SpotStatus as RustStatus,
+};
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
 pub struct CRand;
@@ -44,8 +51,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_excess: 200,
     };
 
-    let mut rust_detector = Spot::new(rust_config)?;
-    let mut ffi_detector = SpotDetector::new(ffi_config)?;
+    let mut rust_detector = RustDetector::new(rust_config)?;
+    let mut ffi_detector = FFIDetector::new(ffi_config)?;
 
     // Generate training data
     let n = 20000;

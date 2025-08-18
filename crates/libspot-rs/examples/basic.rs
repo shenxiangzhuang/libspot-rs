@@ -3,7 +3,7 @@
 //! This example replicates the C libspot example but using the pure Rust API.
 //! It performs a comprehensive benchmark with 50 million samples.
 
-use libspot_rs::{Spot, SpotConfig, SpotStatus};
+use libspot_rs::{SpotConfig, SpotDetector, SpotStatus};
 use std::time::Instant;
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Create and initialize SPOT detector
-    let mut detector = Spot::new(config)?;
+    let mut detector = SpotDetector::new(config)?;
     println!("SPOT detector created successfully");
 
     // Generate initial training data

@@ -1,4 +1,4 @@
-use libspot_rs::{Spot, SpotConfig, SpotStatus};
+use libspot_rs::{SpotConfig, SpotDetector, SpotStatus};
 
 /// Random number generator that matches C's rand()/srand() for reproducible results
 struct CRand {
@@ -37,7 +37,7 @@ fn test_pure_rust_basic_example_behavior() {
     };
 
     // Create and initialize SPOT detector
-    let mut detector = Spot::new(config).unwrap();
+    let mut detector = SpotDetector::new(config).unwrap();
 
     // Generate initial training data with same seed as C example
     let n = 20000;
@@ -114,7 +114,7 @@ fn test_pure_rust_basic_example_larger() {
         max_excess: 200,
     };
 
-    let mut detector = Spot::new(config).unwrap();
+    let mut detector = SpotDetector::new(config).unwrap();
 
     // Generate initial training data
     let n = 20000;
