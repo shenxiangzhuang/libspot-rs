@@ -1,32 +1,9 @@
 [package]
-name = "libspot"
-version = "2.0.0-beta.3.0"
+name = "debug_compare"
+version = "0.1.0"
 edition = "2021"
-authors = ["Mathew Shen <datahonor@gmail.com>"]
-documentation = "https://docs.rs/crate/libspot"
-repository = "https://github.com/shenxiangzhuang/libspot-rs"
-readme = "README.md"
-license = "LGPL-3.0"
-description = "Rust bindings for libspot, a fast time series anomaly detector"
-keywords = ["Spot", "TimeSeries", "AnomalyDetection"]
-
-# Include style (current) - Note: may include extra files due to git submodule behavior
-include = [
-    "src/**/*",
-    "examples/**/*",
-    "tests/**/*",
-    "build.rs",
-    "libspot/Makefile",
-    "libspot/LICENSE.md",
-    "libspot/README.md",
-    "libspot/src/**/*.c",
-    "libspot/include/**/*.h",
-    "./README.md",
-    "./LICENSE",
-]
 
 [dependencies]
+libspot-rs = { path = "crates/libspot-rs" }
+libspot = { path = "crates/libspot" }
 libc = "0.2"
-
-[dev-dependencies]
-approx = "0.5.1"

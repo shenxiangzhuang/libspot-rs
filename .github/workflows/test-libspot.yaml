@@ -1,0 +1,90 @@
+name: Test libspot (FFI)
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'crates/libspot/**'
+      - '.github/workflows/test-libspot.yaml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'crates/libspot/**'
+      - '.github/workflows/test-libspot.yaml'
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-libspot:
+    name: Test libspot (FFI bindings)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          crates/libspot/target
+        key: ${{ runner.os }}-libspot-cargo-${{ hashFiles('crates/libspot/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-libspot-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential pkg-config
+
+    - name: Build C library
+      run: |
+        cd crates/libspot/libspot
+        make clean
+        make
+
+    - name: Check formatting (libspot)
+      run: |
+        cd crates/libspot
+        cargo fmt --all -- --check
+
+    - name: Run clippy (libspot)
+      run: |
+        cd crates/libspot
+        cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Build libspot
+      run: |
+        cd crates/libspot
+        cargo build --verbose
+
+    - name: Run unit tests (libspot)
+      run: |
+        cd crates/libspot
+        cargo test --lib --verbose
+
+    - name: Run integration tests (libspot)
+      run: |
+        cd crates/libspot
+        cargo test --test integration --verbose
+
+    - name: Run basic example test (libspot)
+      run: |
+        cd crates/libspot
+        cargo test --test basic_example test_basic_example_behavior --verbose
+
+    - name: Run doc tests (libspot)
+      run: |
+        cd crates/libspot
+        cargo test --doc --verbose
