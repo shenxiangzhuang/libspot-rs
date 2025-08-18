@@ -119,10 +119,6 @@ impl Peaks {
 
     /// Update all statistics by iterating through the container
     /// This is called when we need to recompute min/max after an erasure
-    ///
-    /// NOTE: This implementation matches a bug in the C libspot implementation
-    /// where e2 is incorrectly assigned instead of accumulated during stats update.
-    /// This maintains exact compatibility with the C library results.
     fn update_stats(&mut self) {
         // Reset min and max
         self.min = f64::NAN;
@@ -137,13 +133,7 @@ impl Peaks {
             // Direct access to container data (matches C implementation)
             let value = self.container.raw_data()[i];
             self.e += value;
-
-            // COMPATIBILITY NOTE: The C implementation has a bug here:
-            // In peaks.c line 45: `peaks->e2 = value * value;` should be `peaks->e2 += value * value;`
-            // We match this bug to ensure exact C compatibility as requested by the user.
-            // This affects variance calculation which impacts MoM estimator and GPD parameter selection.
-            // The C code overwrites e2 on every iteration, so only the last value's square remains.
-            self.e2 = value * value;
+            self.e2 += value * value;
 
             if self.min.is_nan() || (value < self.min) {
                 self.min = value;
