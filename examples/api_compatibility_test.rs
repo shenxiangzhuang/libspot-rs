@@ -87,11 +87,11 @@ fn test_detector_api() -> Result<(), Box<dyn std::error::Error>> {
 
     let _n1 = detector1.n();
     let _n2 = detector2.n();
-    println!("   ✅ n() method signature matches (returns u64)");
+    println!("   ✅ n() method signature matches (returns usize)");
 
     let _nt1 = detector1.nt();
     let _nt2 = detector2.nt();
-    println!("   ✅ nt() method signature matches (returns u64)");
+    println!("   ✅ nt() method signature matches (returns usize)");
 
     let _tail1 = detector1.tail_parameters();
     let _tail2 = detector2.tail_parameters();

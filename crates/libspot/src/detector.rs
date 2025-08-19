@@ -33,7 +33,7 @@ impl SpotDetector {
                 if config.low_tail { 1 } else { 0 },
                 if config.discard_anomalies { 1 } else { 0 },
                 config.level,
-                config.max_excess,
+                config.max_excess as c_ulong,
             );
 
             if status < 0 {
@@ -123,7 +123,7 @@ impl SpotDetector {
                 low_tail: spot_ref.low != 0,
                 discard_anomalies: spot_ref.discard_anomalies != 0,
                 level: spot_ref.level,
-                max_excess: spot_ref.tail.peaks.container.capacity,
+                max_excess: spot_ref.tail.peaks.container.capacity as usize,
             })
         }
     }
