@@ -10,7 +10,7 @@ pub struct SpotConfig {
     /// Excess level (high quantile that delimits the tail)
     pub level: f64,
     /// Maximum number of data points kept to analyze the tail
-    pub max_excess: u64,
+    pub max_excess: usize,
 }
 
 impl Default for SpotConfig {
