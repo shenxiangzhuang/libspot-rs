@@ -87,14 +87,14 @@ let config = SpotConfig {
 
 Both implementations provide identical results to the original C implementation. Benchmark tests process 50M samples and produce mathematically equivalent anomaly counts and thresholds:
 
-|     Metric      | C Implementation | Rust Wrapper (FFI) | Pure Rust (libspot-rs) | Identical |
-|:---------------:|:----------------:|:-------------------:|:-----------------------:|:---------:|
-|  **Anomalies**  |      90,007      |       90,007        |         90,137          |     ✓     |
-|   **Excess**    |       7,829      |        7,829        |          7,699          |     ✓     |
-|   **Normal**    |    49,902,164    |     49,902,164      |       49,902,164        |     ✓     |
-|      **Z**      |     6.237668     |      6.237668       |        6.237567         |     ✓     |
-|      **T**      |     6.236165     |      6.236165       |        6.236165         |     ✓     |
-| **Performance** |    ~1.276820s    |     ~1.372725s      |        ~1.254377s       |     ✓     |
+|     Metric      | C Implementation | Rust Wrapper (FFI) | Pure Rust (libspot-rs) |
+|:---------------:|:----------------:|:-------------------:|:-----------------------:|
+|  **Anomalies**  |      90,007      |     90,007 ✓        |       90,137 ≈          |
+|   **Excess**    |       7,829      |      7,829 ✓        |        7,699 ≈          |
+|   **Normal**    |    49,902,164    |   49,902,164 ✓      |     49,902,164 ✓        |
+|      **Z**      |     6.237668     |    6.237668 ✓       |      6.237567 ≈         |
+|      **T**      |     6.236165     |    6.236165 ✓       |      6.236165 ✓         |
+| **Performance** |    ~1.276820s    |   ~1.372725s ≈      |      ~1.254377s ≈       |
 
 **Benchmark Commands:**
 - **Pure Rust**: `cargo run -r --example basic -p libspot-rs`
