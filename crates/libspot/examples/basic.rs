@@ -88,7 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let duration = start.elapsed();
 
     // Print results
-    println!("{:.6}", duration.as_secs_f64());
+    println!("Duration: {:.6} seconds", duration.as_secs_f64());
     println!("ANOMALY={anomaly} EXCESS={excess} NORMAL={normal}");
     println!(
         "Z={:.6} T={:.6}",

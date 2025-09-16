@@ -1,6 +1,6 @@
 [package]
 name = "libspot"
-version = "2.0.0-beta.4.0"
+version = "2.0.0-beta.5.0"
 edition = "2021"
 authors = ["Mathew Shen <datahonor@gmail.com>"]
 documentation = "https://docs.rs/crate/libspot-ffi"
@@ -22,9 +22,11 @@ include = [
     "./README.md",
 ]
 
+[build-dependencies]
+cc = "1.0"
+
 [dependencies]
 libc = "0.2"
-libspot-rs = { path = "../libspot-rs" }
 
 [dev-dependencies]
 approx = "0.5.1"

@@ -55,16 +55,16 @@ This wrapper provides identical results to the original C implementation. The [`
 
 |     Metric      | C Implementation | Rust Wrapper | Identical |
 |:---------------:|:----------------:|:------------:|:---------:|
-|  **Anomalies**  |      25,898      |    25,898    |     ✓     |
-|   **Excess**    |      71,938      |    71,938    |     ✓     |
+|  **Anomalies**  |      90,007      |    90,007    |     ✓     |
+|   **Excess**    |       7,829      |     7,829    |     ✓     |
 |   **Normal**    |    49,902,164    |  49,902,164  |     ✓     |
-|      **Z**      |     7.422655     |   7.422655   |     ✓     |
+|      **Z**      |     6.237668     |   6.237668   |     ✓     |
 |      **T**      |     6.236165     |   6.236165   |     ✓     |
-| **Performance** |    ~5.476262s    |  ~5.479736s  |     ✓     |
+| **Performance** |    ~1.276820s    |  ~1.372725s  |     ✓     |
 
 We run the benchmark with:
 - Rust: `cargo run -r --example basic`(with `-r` flag to run the example in release mode).
-- C: `cc -O3 -o /tmp/basic examples/basic.c -Idist/ -Ldist/ -l:libspot.so.2.0b3 -lm && LD_LIBRARY_PATH=dist /tmp/basic`(with `-O3` flag to compile the example in release mode).
+- C: `cc -O3 -o /tmp/basic examples/basic.c -Idist/ -Ldist/ -l:libspot.so.2.0b5 -lm && LD_LIBRARY_PATH=dist /tmp/basic`(with `-O3` flag to compile the example in release mode).
 
 As you can see, the performance is **very close**. You may get different results due to the different hardware and environment, but the results should be very similar.
 
