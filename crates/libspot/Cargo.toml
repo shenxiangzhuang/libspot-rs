@@ -19,9 +19,11 @@ include = [
     "libspot/README.md",
     "libspot/src/**/*.c",
     "libspot/include/**/*.h",
-    "libspot/dist/**/*",
     "./README.md",
 ]
+
+[build-dependencies]
+cc = "1.0"
 
 [dependencies]
 libc = "0.2"
