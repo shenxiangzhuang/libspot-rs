@@ -24,7 +24,6 @@ include = [
 
 [dependencies]
 libc = "0.2"
-libspot-rs = { path = "../libspot-rs" }
 
 [dev-dependencies]
 approx = "0.5.1"
