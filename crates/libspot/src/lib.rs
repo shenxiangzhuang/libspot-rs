@@ -1,4 +1,4 @@
-#![doc = include_str!("../../../README.md")]
+#![doc = include_str!("../README.md")]
 
 use std::os::raw::{c_char, c_ulong};
 
