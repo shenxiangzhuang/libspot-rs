@@ -19,6 +19,7 @@ include = [
     "libspot/README.md",
     "libspot/src/**/*.c",
     "libspot/include/**/*.h",
+    "libspot/dist/**/*",
     "./README.md",
 ]
 
