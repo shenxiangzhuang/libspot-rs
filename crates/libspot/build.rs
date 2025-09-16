@@ -25,7 +25,7 @@ fn main() {
     for entry in std::fs::read_dir(&src_dir).expect("Failed to read src directory") {
         let entry = entry.expect("Failed to read directory entry");
         let path = entry.path();
-        if path.extension().map_or(false, |ext| ext == "c") {
+        if path.extension().is_some_and(|ext| ext == "c") {
             build.file(&path);
         }
     }
