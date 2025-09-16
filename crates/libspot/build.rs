@@ -7,7 +7,7 @@ fn main() {
     let libspot_dir = Path::new(&manifest_dir).join("libspot");
 
     // Check if libspot library exists
-    let lib_path = libspot_dir.join("dist").join("libspot.a.2.0b4");
+    let lib_path = libspot_dir.join("dist").join("libspot.a.2.0b5");
     if !lib_path.exists() {
         panic!(
             "libspot library not found at {lib_path:?}. Please run 'make' in the libspot directory first."
