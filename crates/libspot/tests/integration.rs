@@ -155,7 +155,7 @@ fn test_quantile_behavior() {
     let mut detector = SpotDetector::new(config).unwrap();
 
     // Simple symmetric data
-    let data: Vec<f64> = (0..1000).map(|i| ((i as f64 / 500.0) - 1.0)).collect();
+    let data: Vec<f64> = (0..1000).map(|i| (i as f64 / 500.0) - 1.0).collect();
     detector.fit(&data).unwrap();
 
     // Test quantile function
