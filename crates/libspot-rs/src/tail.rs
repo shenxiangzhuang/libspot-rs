@@ -10,11 +10,19 @@ use crate::math::{xexp, xlog, xpow};
 use crate::peaks::Peaks;
 
 /// Structure that embeds GPD parameters (GPD tail actually)
+///
+/// # Serialization
+///
+/// When the `serde` feature is enabled, this struct can be serialized and deserialized.
+/// This allows saving and restoring the GPD tail model parameters.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Tail {
     /// GPD gamma parameter
+    #[cfg_attr(feature = "serde", serde(with = "crate::ser::nan_safe_f64"))]
     gamma: f64,
     /// GPD sigma parameter
+    #[cfg_attr(feature = "serde", serde(with = "crate::ser::nan_safe_f64"))]
     sigma: f64,
     /// Underlying Peaks structure
     peaks: Peaks,

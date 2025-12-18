@@ -19,8 +19,15 @@ include = [
     "./LICENSE",
 ]
 
+[features]
+default = ["serde"]
+serde = ["dep:serde"]
+
 [dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 [dev-dependencies]
 approx = "0.5.1"
 libc = "0.2"
+proptest = "1.5"
+serde_json = "1.0"

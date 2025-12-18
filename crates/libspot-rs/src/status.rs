@@ -1,7 +1,12 @@
 //! Status codes for SPOT operations
 
 /// Status codes returned by SPOT operations that match the C implementation exactly
+///
+/// # Serialization
+///
+/// When the `serde` feature is enabled, this enum can be serialized and deserialized.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum SpotStatus {
     /// Data is normal
     Normal = 0,

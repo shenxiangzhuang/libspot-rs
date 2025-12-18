@@ -7,13 +7,20 @@
 use crate::error::{SpotError, SpotResult};
 
 /// Circular buffer implementation that matches the C Ubend structure
+///
+/// # Serialization
+///
+/// When the `serde` feature is enabled, this struct can be serialized and deserialized.
+/// This is useful for saving the state of a SPOT detector and restoring it later.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ubend {
     /// Current position inside the container
     cursor: usize,
     /// Maximum storage capacity
     capacity: usize,
     /// Last erased value (i.e., replaced by a new one)
+    #[cfg_attr(feature = "serde", serde(with = "crate::ser::nan_safe_f64"))]
     last_erased_data: f64,
     /// Container fill status (true = filled, false = not filled)
     filled: bool,

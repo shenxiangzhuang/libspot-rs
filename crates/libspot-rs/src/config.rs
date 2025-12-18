@@ -1,7 +1,24 @@
 //! Configuration types for SPOT detector
 
 /// Configuration parameters for SPOT detector
+///
+/// # Serialization
+///
+/// When the `serde` feature is enabled, this struct can be serialized and deserialized.
+/// This is useful for saving detector configurations or loading them from files.
+///
+/// # Example with serde (requires `serde` feature)
+///
+/// ```ignore
+/// use libspot_rs::SpotConfig;
+/// use serde_json;
+///
+/// let config = SpotConfig::default();
+/// let json = serde_json::to_string(&config).unwrap();
+/// let loaded: SpotConfig = serde_json::from_str(&json).unwrap();
+/// ```
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SpotConfig {
     /// Anomaly probability threshold (must be between 0 and 1-level)
     pub q: f64,

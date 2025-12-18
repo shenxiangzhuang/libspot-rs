@@ -8,15 +8,23 @@ use crate::error::SpotResult;
 use crate::ubend::Ubend;
 
 /// Structure that computes stats about the peaks
+///
+/// # Serialization
+///
+/// When the `serde` feature is enabled, this struct can be serialized and deserialized.
+/// This allows saving and restoring the peak statistics state.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Peaks {
     /// Sum of the elements
     e: f64,
     /// Sum of the square of the elements
     e2: f64,
     /// Minimum of the elements
+    #[cfg_attr(feature = "serde", serde(with = "crate::ser::nan_safe_f64"))]
     min: f64,
     /// Maximum of the elements
+    #[cfg_attr(feature = "serde", serde(with = "crate::ser::nan_safe_f64"))]
     max: f64,
     /// Underlying data container
     container: Ubend,

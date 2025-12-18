@@ -34,6 +34,55 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## Features
+
+### Serialization (Model Persistence)
+
+Serialization support is **enabled by default**. SPOT detectors can be serialized and deserialized for model deployment:
+
+```toml
+[dependencies]
+libspot-rs = { version = "0.1" }  # serde is enabled by default
+serde_json = "1.0"
+```
+
+To disable serialization support (e.g., for minimal dependencies), use:
+```toml
+[dependencies]
+libspot-rs = { version = "0.1", default-features = false }
+```
+
+This enables:
+- **Model persistence**: Save trained models to disk and load them later
+- **Model deployment**: Export models for use in production systems
+- **Model sharing**: Share trained models between applications
+- **Checkpointing**: Save model state during long-running processes
+
+Example usage:
+
+```rust,ignore
+use libspot_rs::{SpotConfig, SpotDetector};
+use serde_json;
+
+// Train a model
+let config = SpotConfig::default();
+let mut spot = SpotDetector::new(config).unwrap();
+let training_data: Vec<f64> = (0..1000).map(|i| i as f64 / 100.0).collect();
+spot.fit(&training_data).unwrap();
+
+// Save the model to a JSON file
+let json = serde_json::to_string_pretty(&spot).unwrap();
+std::fs::write("model.json", &json).unwrap();
+
+// Later, load the model and continue using it
+let json = std::fs::read_to_string("model.json").unwrap();
+let mut loaded: SpotDetector = serde_json::from_str(&json).unwrap();
+
+// The loaded model is ready to use immediately
+let status = loaded.step(50.0).unwrap();
+```
+
+The serialization handles special float values (NaN, Infinity) correctly, ensuring that models can be reliably saved and restored.
 
 ## Alternative
 
