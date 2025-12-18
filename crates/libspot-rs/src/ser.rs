@@ -99,11 +99,11 @@ mod tests {
 
     #[test]
     fn test_normal_float_serialization() {
-        let test = TestStruct { value: 3.14 };
+        let test = TestStruct { value: 3.1 };
         let json = serde_json::to_string(&test).unwrap();
-        assert_eq!(json, r#"{"value":3.14}"#);
+        assert_eq!(json, r#"{"value":3.1}"#);
 
         let loaded: TestStruct = serde_json::from_str(&json).unwrap();
-        assert!((loaded.value - 3.14).abs() < 1e-10);
+        assert!((loaded.value - 3.1).abs() < 1e-10);
     }
 }
