@@ -8,7 +8,12 @@ use std::fmt;
 pub type SpotResult<T> = Result<T, SpotError>;
 
 /// Error codes that match the C implementation
+///
+/// # Serialization
+///
+/// When the `serde` feature is enabled, this enum can be serialized and deserialized.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum SpotError {
     /// Memory allocation failed
     MemoryAllocationFailed = 1000,

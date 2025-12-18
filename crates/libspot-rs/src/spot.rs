@@ -2,6 +2,36 @@
 //!
 //! This module implements the main SPOT (Streaming Peaks Over Threshold) detector
 //! that provides real-time anomaly detection for time series data.
+//!
+//! # Serialization
+//!
+//! When the `serde` feature is enabled, the [`SpotDetector`] can be serialized and
+//! deserialized. This is particularly useful for:
+//!
+//! - **Model persistence**: Save a trained model to disk and load it later
+//! - **Model deployment**: Export models for use in production systems
+//! - **Model sharing**: Share trained models between different applications
+//! - **Checkpointing**: Save model state during long-running processes
+//!
+//! ## Example
+//!
+//! ```ignore
+//! use libspot_rs::{SpotConfig, SpotDetector};
+//! use serde_json;
+//!
+//! // Train a model
+//! let config = SpotConfig::default();
+//! let mut spot = SpotDetector::new(config).unwrap();
+//! let training_data: Vec<f64> = (0..1000).map(|i| i as f64 / 100.0).collect();
+//! spot.fit(&training_data).unwrap();
+//!
+//! // Serialize the trained model
+//! let json = serde_json::to_string(&spot).unwrap();
+//!
+//! // Later, deserialize and continue using
+//! let loaded: SpotDetector = serde_json::from_str(&json).unwrap();
+//! let status = loaded.step(50.0);
+//! ```
 
 use crate::config::SpotConfig;
 
@@ -11,7 +41,36 @@ use crate::status::SpotStatus;
 use crate::tail::Tail;
 
 /// Main SPOT detector for streaming anomaly detection
+///
+/// The `SpotDetector` implements the SPOT (Streaming Peaks Over Threshold) algorithm
+/// for real-time anomaly detection in streaming time series data.
+///
+/// # Serialization
+///
+/// When the `serde` feature is enabled, the detector can be serialized and deserialized,
+/// allowing you to save trained models and restore them later without re-training.
+///
+/// # Example
+///
+/// ```
+/// use libspot_rs::{SpotConfig, SpotDetector, SpotStatus};
+///
+/// let config = SpotConfig::default();
+/// let mut spot = SpotDetector::new(config).unwrap();
+///
+/// // Fit with training data
+/// let data: Vec<f64> = (0..1000).map(|i| (i as f64) / 100.0).collect();
+/// spot.fit(&data).unwrap();
+///
+/// // Process new data points
+/// match spot.step(15.0).unwrap() {
+///     SpotStatus::Normal => println!("Normal"),
+///     SpotStatus::Excess => println!("Excess"),
+///     SpotStatus::Anomaly => println!("Anomaly detected!"),
+/// }
+/// ```
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SpotDetector {
     /// Probability of an anomaly
     q: f64,
@@ -24,8 +83,10 @@ pub struct SpotDetector {
     /// Internal constant (+/- 1.0)
     up_down: f64,
     /// Normal/abnormal threshold
+    #[cfg_attr(feature = "serde", serde(with = "crate::ser::nan_safe_f64"))]
     anomaly_threshold: f64,
     /// Tail threshold
+    #[cfg_attr(feature = "serde", serde(with = "crate::ser::nan_safe_f64"))]
     excess_threshold: f64,
     /// Total number of excesses
     nt: usize,
