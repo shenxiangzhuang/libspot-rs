@@ -3,6 +3,10 @@ use std::os::raw::{c_char, c_double, c_int, c_ulong, c_void};
 // Function pointer types
 pub type MallocFn = unsafe extern "C" fn(size: usize) -> *mut c_void;
 pub type FreeFn = unsafe extern "C" fn(ptr: *mut c_void);
+pub type FrexpFn = unsafe extern "C" fn(value: c_double, exp: *mut c_int) -> c_double;
+pub type LdexpFn = unsafe extern "C" fn(value: c_double, exp: c_int) -> c_double;
+pub type MathFn = unsafe extern "C" fn(x: c_double) -> c_double;
+pub type Math2Fn = unsafe extern "C" fn(x: c_double, y: c_double) -> c_double;
 
 // Internal C structures (kept private to this module)
 #[repr(C)]
@@ -62,4 +66,6 @@ extern "C" {
     pub fn libspot_version(buffer: *mut c_char, size: c_ulong);
     // pub fn libspot_error(err: c_int, buffer: *mut c_char, size: c_ulong);
     pub fn set_allocators(m: MallocFn, f: FreeFn);
+    pub fn set_float_utils(l: Option<LdexpFn>, f: Option<FrexpFn>);
+    pub fn set_math_functions(lo: Option<MathFn>, ex: Option<MathFn>, po: Option<Math2Fn>);
 }
