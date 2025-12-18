@@ -2,18 +2,24 @@
 //!
 //! # Feature Flags
 //!
-//! - **`serde`**: Enables serialization and deserialization support for all model types
+//! - **`serde`** (enabled by default): Enables serialization and deserialization support for all model types
 //!   using the [`serde`](https://serde.rs/) framework. This is useful for:
 //!   - Saving trained models to disk
 //!   - Loading pre-trained models for deployment
 //!   - Sharing models between applications
 //!   - Checkpointing during long-running processes
 //!
-//! ## Example with Serialization (requires `serde` feature)
+//!   To disable serialization support (e.g., for minimal dependencies), use:
+//!   ```toml
+//!   [dependencies]
+//!   libspot-rs = { version = "0.1", default-features = false }
+//!   ```
+//!
+//! ## Example with Serialization
 //!
 //! ```toml
 //! [dependencies]
-//! libspot-rs = { version = "0.1", features = ["serde"] }
+//! libspot-rs = { version = "0.1" }  # serde is enabled by default
 //! serde_json = "1.0"
 //! ```
 //!
@@ -27,7 +33,7 @@
 //! let training_data: Vec<f64> = (0..1000).map(|i| i as f64 / 100.0).collect();
 //! spot.fit(&training_data).unwrap();
 //!
-//! // Serialize to JSON
+//! // Serialize to JSON (serde is enabled by default)
 //! let json = serde_json::to_string(&spot).unwrap();
 //!
 //! // Save to file

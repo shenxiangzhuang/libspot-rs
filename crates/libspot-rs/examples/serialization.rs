@@ -6,7 +6,9 @@
 //! 3. Deserialize (load) the model from JSON
 //! 4. Continue using the loaded model for anomaly detection
 //!
-//! Run with: cargo run --example serialization --features serde
+//! Run with: cargo run --example serialization
+
+#![cfg(feature = "serde")]
 
 use libspot_rs::{SpotConfig, SpotDetector, SpotStatus};
 
