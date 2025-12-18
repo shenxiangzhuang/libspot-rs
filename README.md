@@ -74,7 +74,7 @@ let config = SpotConfig {
 | **Installation** | `cargo add libspot` | `cargo add libspot-rs` |
 | **Type** | C FFI Bindings | Pure Rust Implementation |
 | **API** | ✅ Identical | ✅ Identical |
-| **Performance** | ✅ ~1.28s (50M samples) | ✅ ~1.25s (50M samples) |
+| **Performance** | ✅ ~1.04s (50M samples) | ✅ ~0.83s (50M samples) |
 | **Memory Safety** | ⚠️ Manual (C code) | ✅ Guaranteed |
 | **Dependencies** | 📦 C library + bindgen | 🎯 None |
 | **Cross-platform** | ⚠️ Build complexity | ✅ Easy |
@@ -88,18 +88,18 @@ let config = SpotConfig {
 Both implementations provide identical results to the original C implementation. Benchmark tests process 50M samples and produce mathematically equivalent anomaly counts and thresholds:
 
 |     Metric      | C Implementation | Rust Wrapper (FFI) | Pure Rust (libspot-rs) |
-|:---------------:|:----------------:|:-------------------:|:-----------------------:|
-|  **Anomalies**  |      90,007      |     90,007 ✓        |       90,137 ≈          |
-|   **Excess**    |       7,829      |      7,829 ✓        |        7,699 ≈          |
-|   **Normal**    |    49,902,164    |   49,902,164 ✓      |     49,902,164 ✓        |
-|      **Z**      |     6.237668     |    6.237668 ✓       |      6.237567 ≈         |
-|      **T**      |     6.236165     |    6.236165 ✓       |      6.236165 ✓         |
-| **Performance** |    ~1.276820s    |   ~1.372725s ≈      |      ~1.254377s ≈       |
+|:---------------:|:----------------:|:------------------:|:----------------------:|
+|  **Anomalies**  |      90,007      |     90,007 ✓       |       90,137 ≈         |
+|   **Excess**    |       7,829      |      7,829 ✓       |        7,699 ≈         |
+|   **Normal**    |    49,902,164    |   49,902,164 ✓     |     49,902,164 ✓       |
+|      **Z**      |     6.237668     |    6.237668 ✓      |      6.237567 ≈        |
+|      **T**      |     6.236165     |    6.236165 ✓      |      6.236165 ✓        |
+| **Performance** |      ~0.67s      |     ~1.04s ≈       |       ~0.83s ≈         |
 
 **Benchmark Commands:**
-- **Pure Rust**: `cargo run -r --example basic -p libspot-rs`
-- **C FFI**: `cargo run -r --example basic -p libspot`
-- **Original C**: `cc -O3 -o /tmp/basic examples/basic.c -Idist/ -Ldist/ -l:libspot.so.2.0b5 -lm && LD_LIBRARY_PATH=dist /tmp/basic`
+- **Pure Rust**: `cargo run -r --example basic` (in `crates/libspot-rs`)
+- **C FFI**: `cargo run -r --example basic` (in `crates/libspot`)
+- **Original C**: `cd crates/libspot/libspot && make && cc -O3 -o /tmp/basic ../examples/basic.c dist/libspot.a.$(cat version) -Idist/ -lm && /tmp/basic`
 
 The results demonstrate that both Rust implementations achieve excellent performance while maintaining mathematical correctness. The pure Rust version is actually the fastest, showing the effectiveness of Rust's optimizations.
 
