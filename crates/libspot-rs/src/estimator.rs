@@ -97,15 +97,13 @@ pub fn compute_log_likelihood(peaks: &Peaks, gamma: f64, sigma: f64) -> f64 {
     let c = 1.0 + 1.0 / gamma;
     let x = gamma / sigma;
 
-    // Iterate through container data directly (matches C implementation)
-    for i in 0..nt_local {
-        if let Some(value) = peaks.container().get(i) {
-            let term = 1.0 + x * value;
-            if term <= 0.0 {
-                return f64::NEG_INFINITY; // Invalid parameters
-            }
-            r += -c * xlog(term);
+    // Iterate through raw container data order (matches C implementation)
+    for &value in peaks.container().raw_data().iter().take(nt_local) {
+        let term = 1.0 + x * value;
+        if term <= 0.0 {
+            return f64::NEG_INFINITY; // Invalid parameters
         }
+        r += -c * xlog(term);
     }
 
     r
@@ -117,15 +115,13 @@ fn grimshaw_w(x: f64, peaks: &Peaks) -> f64 {
     let mut u: f64 = 0.0;
     let mut v: f64 = 0.0;
 
-    for i in 0..nt_local {
-        if let Some(data_i) = peaks.container().get(i) {
-            let s: f64 = 1.0 + x * data_i;
-            if s <= 0.0 {
-                return f64::NAN; // Invalid
-            }
-            u += 1.0 / s;
-            v += xlog(s);
+    for &data_i in peaks.container().raw_data().iter().take(nt_local) {
+        let s: f64 = 1.0 + x * data_i;
+        if s <= 0.0 {
+            return f64::NAN; // Invalid
         }
+        u += 1.0 / s;
+        v += xlog(s);
     }
 
     if nt_local == 0 {
@@ -141,10 +137,8 @@ fn grimshaw_v(x: f64, peaks: &Peaks) -> f64 {
     let mut v = 0.0;
     let nt_local = peaks.size();
 
-    for i in 0..nt_local {
-        if let Some(data_i) = peaks.container().get(i) {
-            v += xlog(1.0 + x * data_i);
-        }
+    for &data_i in peaks.container().raw_data().iter().take(nt_local) {
+        v += xlog(1.0 + x * data_i);
     }
 
     let nt = nt_local as f64;
