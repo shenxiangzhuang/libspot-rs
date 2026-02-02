@@ -89,12 +89,12 @@ Both implementations provide identical results to the original C implementation.
 
 |     Metric      | C Implementation | Rust Wrapper (FFI) | Pure Rust (libspot-rs) |
 |:---------------:|:----------------:|:------------------:|:----------------------:|
-|  **Anomalies**  |      90,007      |     90,007 ✓       |       90,137 ≈         |
-|   **Excess**    |       7,829      |      7,829 ✓       |        7,699 ≈         |
+|  **Anomalies**  |      90,007      |     90,007 ✓       |       90,007 ✓         |
+|   **Excess**    |       7,829      |      7,829 ✓       |        7,829 ✓         |
 |   **Normal**    |    49,902,164    |   49,902,164 ✓     |     49,902,164 ✓       |
-|      **Z**      |     6.237668     |    6.237668 ✓      |      6.237567 ≈        |
+|      **Z**      |     6.237668     |    6.237668 ✓      |      6.237668 ✓        |
 |      **T**      |     6.236165     |    6.236165 ✓      |      6.236165 ✓        |
-| **Performance** |      ~0.67s      |     ~1.04s ≈       |       ~0.83s ≈         |
+| **Performance** |      ~0.67s      |     ~1.04s ≈       |       ~1.13s ≈         |
 
 **Benchmark Commands:**
 - **Pure Rust**: `cargo run -r --example basic` (in `crates/libspot-rs`)
