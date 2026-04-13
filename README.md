@@ -1,11 +1,18 @@
-# libspot-rs
+<!--# libspot-rs-->
+
+<p align="center">
+    <img src="docs/img/logo.svg" width="300" alt="libspot-rs"/>
+</p>
+
+<h1 align="center">libspot-rs</h1>
+
+Rust implementations of the [SPOT (Streaming Peaks Over Threshold)](https://github.com/asiffer/libspot) algorithm for real-time anomaly detection in time series data.
 
 | Crate | Version | Documentation | License |
 |-------|---------|---------------|---------|
 | **libspot** (C FFI) | [![Crates.io](https://img.shields.io/crates/v/libspot.svg)](https://crates.io/crates/libspot) | [![Documentation](https://docs.rs/libspot/badge.svg)](https://docs.rs/libspot) | [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) |
 | **libspot-rs** (Pure Rust) | [![Crates.io](https://img.shields.io/crates/v/libspot-rs.svg)](https://crates.io/crates/libspot-rs) | [![Documentation](https://docs.rs/libspot-rs/badge.svg)](https://docs.rs/libspot-rs) | [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) |
 
-Rust implementations of the [SPOT (Streaming Peaks Over Threshold)](https://github.com/asiffer/libspot) algorithm for real-time anomaly detection in time series data.
 
 ## Installation
 
@@ -115,3 +122,7 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 ## License
 
 This project is licensed under the **GNU Lesser General Public License v3.0 (LGPL-3.0)** to comply with the underlying [libspot](https://github.com/asiffer/libspot) C library license.
+
+## Acknowledgments
+
+The logo design is adapted from the original [libspot logo](https://github.com/asiffer/libspot/blob/master/docs/img/logo.svg) with Rust-themed styling to reflect this project's implementation in the Rust programming language.
