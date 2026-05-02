@@ -54,6 +54,17 @@ impl Ubend {
         }
     }
 
+    /// Reset the container to its empty state, keeping the allocated buffer.
+    ///
+    /// After `reset`, [`size`](Self::size) returns 0 and the next [`push`](Self::push)
+    /// behaves as on a freshly constructed container. The underlying `Vec`
+    /// allocation is preserved (no realloc).
+    pub(crate) fn reset(&mut self) {
+        self.cursor = 0;
+        self.filled = false;
+        self.last_erased_data = f64::NAN;
+    }
+
     /// Push a new value into the container
     /// Returns the value that was erased (if any), otherwise NaN
     pub fn push(&mut self, x: f64) -> f64 {

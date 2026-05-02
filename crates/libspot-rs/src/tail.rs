@@ -43,6 +43,13 @@ impl Tail {
         self.peaks.push(x);
     }
 
+    /// Reset the tail to its initial state, keeping the allocated buffer.
+    pub(crate) fn reset(&mut self) {
+        self.gamma = f64::NAN;
+        self.sigma = f64::NAN;
+        self.peaks.reset();
+    }
+
     /// Fit the GPD parameters using the available estimators
     /// Returns the log-likelihood of the best fit
     pub fn fit(&mut self) -> f64 {

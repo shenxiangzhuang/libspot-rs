@@ -250,6 +250,19 @@ impl SpotDetector {
         (self.tail.gamma(), self.tail.sigma())
     }
 
+    /// Reset the detector's internal state, keeping the configuration and the
+    /// backing buffer. After calling this, [`fit`](Self::fit) must be called
+    /// again before further [`step`](Self::step) calls.
+    ///
+    /// This mirrors the `spot_reset` C API exposed by the FFI wrapper crate.
+    pub fn reset(&mut self) {
+        self.anomaly_threshold = f64::NAN;
+        self.excess_threshold = f64::NAN;
+        self.nt = 0;
+        self.n = 0;
+        self.tail.reset();
+    }
+
     /// Get the current size of the tail data
     pub fn tail_size(&self) -> usize {
         self.tail.size()
@@ -366,6 +379,39 @@ mod tests {
         let result = spot.step(f64::NAN);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), SpotError::DataIsNaN);
+    }
+
+    #[test]
+    fn test_spot_reset_returns_to_pristine_state() {
+        let config = SpotConfig::default();
+        let mut spot = SpotDetector::new(config.clone()).unwrap();
+
+        let data: Vec<f64> = (0..1000).map(|i| (i as f64 / 1000.0) * 2.0 - 1.0).collect();
+        spot.fit(&data).unwrap();
+        for v in &data {
+            let _ = spot.step(*v).unwrap();
+        }
+        assert!(spot.n() > 0);
+        assert!(!spot.anomaly_threshold().is_nan());
+
+        spot.reset();
+
+        // Looks like a freshly constructed detector.
+        assert!(spot.anomaly_threshold().is_nan());
+        assert!(spot.excess_threshold().is_nan());
+        assert_eq!(spot.n(), 0);
+        assert_eq!(spot.nt(), 0);
+        assert_eq!(spot.tail_size(), 0);
+        assert_eq!(spot.config(), Some(config.clone()));
+
+        // Re-fit produces identical numbers to a fresh detector.
+        let mut fresh = SpotDetector::new(config).unwrap();
+        spot.fit(&data).unwrap();
+        fresh.fit(&data).unwrap();
+        assert_relative_eq!(spot.anomaly_threshold(), fresh.anomaly_threshold());
+        assert_relative_eq!(spot.excess_threshold(), fresh.excess_threshold());
+        assert_eq!(spot.nt(), fresh.nt());
+        assert_eq!(spot.n(), fresh.n());
     }
 
     #[test]

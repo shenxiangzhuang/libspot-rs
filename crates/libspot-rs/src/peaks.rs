@@ -47,6 +47,15 @@ impl Peaks {
         self.container.size()
     }
 
+    /// Reset the peaks to their empty state, keeping the allocated buffer.
+    pub(crate) fn reset(&mut self) {
+        self.e = 0.0;
+        self.e2 = 0.0;
+        self.min = f64::NAN;
+        self.max = f64::NAN;
+        self.container.reset();
+    }
+
     /// Add a new data point into the peaks
     pub fn push(&mut self, x: f64) {
         let erased = self.container.push(x);
