@@ -81,7 +81,7 @@ let config = SpotConfig {
 | **Installation** | `cargo add libspot` | `cargo add libspot-rs` |
 | **Type** | C FFI Bindings | Pure Rust Implementation |
 | **API** | ✅ Identical | ✅ Identical |
-| **Performance** | ✅ ~1.04s (50M samples) | ✅ ~0.83s (50M samples) |
+| **Performance** | ~1.55 s (50M samples) | ~1.19 s (50M samples) |
 | **Memory Safety** | ⚠️ Manual (C code) | ✅ Guaranteed |
 | **Dependencies** | 📦 C library + bindgen | 🎯 None |
 | **Cross-platform** | ⚠️ Build complexity | ✅ Easy |
@@ -101,14 +101,16 @@ Both implementations provide identical results to the original C implementation.
 |   **Normal**    |    49,902,164    |   49,902,164 ✓     |     49,902,164 ✓       |
 |      **Z**      |     6.237668     |    6.237668 ✓      |      6.237668 ✓        |
 |      **T**      |     6.236165     |    6.236165 ✓      |      6.236165 ✓        |
-| **Performance** |      ~0.67s      |     ~1.04s ≈       |       ~1.13s ≈         |
+| **Performance** |  1.006 s ± 0.003 |  1.555 s ± 0.036   |    1.191 s ± 0.004     |
+
+**Benchmark setup** — Linux x86_64 (GitHub Actions `ubuntu-latest`), release build, [`hyperfine`](https://github.com/sharkdp/hyperfine) with `--warmup 1 --runs 5`. Numbers are reproduced on every PR by [`.github/workflows/test-consistency.yaml`](.github/workflows/test-consistency.yaml); see the workflow run summary for the exact table from the latest commit.
 
 **Benchmark Commands:**
 - **Pure Rust**: `cargo run -r --example basic` (in `crates/libspot-rs`)
 - **C FFI**: `cargo run -r --example basic` (in `crates/libspot`)
 - **Original C**: `cd crates/libspot/libspot && make && cc -O3 -o /tmp/basic ../examples/basic.c dist/libspot.a.$(cat version) -Idist/ -lm && /tmp/basic`
 
-The results demonstrate that both Rust implementations achieve excellent performance while maintaining mathematical correctness. The pure Rust version is actually the fastest, showing the effectiveness of Rust's optimizations.
+All three implementations agree on every count and threshold to the printed precision. Performance-wise, the raw C library is the baseline; the pure-Rust port stays close (~1.18× C), while the FFI wrapper pays a ~1.55× C overhead due to per-step Rust↔C transitions across 50M iterations.
 
 ## Documentation
 
