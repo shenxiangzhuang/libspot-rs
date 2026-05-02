@@ -54,6 +54,17 @@ impl Ubend {
         }
     }
 
+    /// Reset the container to its empty state, keeping the allocated buffer.
+    ///
+    /// After `reset`, [`size`](Self::size) returns 0 and the next [`push`](Self::push)
+    /// behaves as on a freshly constructed container. The underlying `Vec`
+    /// allocation is preserved (no realloc).
+    pub(crate) fn reset(&mut self) {
+        self.cursor = 0;
+        self.filled = false;
+        self.last_erased_data = f64::NAN;
+    }
+
     /// Push a new value into the container
     /// Returns the value that was erased (if any), otherwise NaN
     pub fn push(&mut self, x: f64) -> f64 {
@@ -159,6 +170,43 @@ impl<'a> ExactSizeIterator for UbendIterator<'a> {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+
+    #[test]
+    fn test_ubend_reset_clears_state_and_preserves_capacity() {
+        let mut ub = Ubend::new(3).unwrap();
+        // Fill past capacity so `filled = true` and `last_erased_data` is set.
+        let _ = ub.push(1.0);
+        let _ = ub.push(2.0);
+        let _ = ub.push(3.0);
+        let erased = ub.push(4.0);
+        assert_relative_eq!(erased, 1.0);
+        assert_eq!(ub.size(), 3);
+
+        ub.reset();
+
+        // Empty again, but capacity (and the underlying Vec) is preserved.
+        assert_eq!(ub.size(), 0);
+        assert_eq!(ub.capacity, 3);
+        assert_eq!(ub.cursor, 0);
+        assert!(!ub.filled);
+        assert!(ub.last_erased_data.is_nan());
+        assert_eq!(ub.data.len(), 3); // Vec not reallocated
+
+        // After reset, the next push behaves like on a fresh Ubend:
+        // it returns NaN (nothing erased) instead of the old `last_erased_data`.
+        let erased_after_reset = ub.push(10.0);
+        assert!(erased_after_reset.is_nan());
+        assert_eq!(ub.size(), 1);
+    }
+
+    #[test]
+    fn test_ubend_reset_is_idempotent() {
+        let mut ub = Ubend::new(2).unwrap();
+        ub.reset();
+        ub.reset();
+        assert_eq!(ub.size(), 0);
+        assert!(ub.last_erased_data.is_nan());
+    }
 
     #[test]
     fn test_ubend_creation() {

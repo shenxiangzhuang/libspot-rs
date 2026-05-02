@@ -47,6 +47,15 @@ impl Peaks {
         self.container.size()
     }
 
+    /// Reset the peaks to their empty state, keeping the allocated buffer.
+    pub(crate) fn reset(&mut self) {
+        self.e = 0.0;
+        self.e2 = 0.0;
+        self.min = f64::NAN;
+        self.max = f64::NAN;
+        self.container.reset();
+    }
+
     /// Add a new data point into the peaks
     pub fn push(&mut self, x: f64) {
         let erased = self.container.push(x);
@@ -158,6 +167,34 @@ mod tests {
     use super::*;
     use crate::error::SpotError;
     use approx::assert_relative_eq;
+
+    #[test]
+    fn test_peaks_reset_clears_stats() {
+        let mut p = Peaks::new(4).unwrap();
+        for v in [1.0, 2.0, 3.0, 4.0, 5.0] {
+            p.push(v); // last push will wrap and erase 1.0
+        }
+        assert!(p.size() > 0);
+        assert!(!p.sum().is_nan());
+
+        p.reset();
+
+        assert_eq!(p.size(), 0);
+        assert_relative_eq!(p.sum(), 0.0);
+        assert_relative_eq!(p.sum_squares(), 0.0);
+        assert!(p.min().is_nan());
+        assert!(p.max().is_nan());
+        assert!(p.mean().is_nan());
+        assert!(p.variance().is_nan());
+
+        // After reset, accumulators rebuild correctly from scratch.
+        p.push(10.0);
+        p.push(20.0);
+        assert_eq!(p.size(), 2);
+        assert_relative_eq!(p.sum(), 30.0);
+        assert_relative_eq!(p.min(), 10.0);
+        assert_relative_eq!(p.max(), 20.0);
+    }
 
     #[test]
     fn test_peaks_creation() {
