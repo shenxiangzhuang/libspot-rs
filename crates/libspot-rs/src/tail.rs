@@ -153,6 +153,24 @@ mod tests {
     use crate::error::SpotError;
 
     #[test]
+    fn test_tail_reset_clears_gpd_params_and_peaks() {
+        let mut tail = Tail::new(50).unwrap();
+        for i in 0..40 {
+            tail.push(0.1 + i as f64 * 0.05);
+        }
+        let _ = tail.fit();
+        assert!(tail.size() > 0);
+        // gamma/sigma may be NaN if the fit fails on this trivial input,
+        // so we only assert they're cleared post-reset, not pre-reset.
+
+        tail.reset();
+
+        assert_eq!(tail.size(), 0);
+        assert!(tail.gamma().is_nan());
+        assert!(tail.sigma().is_nan());
+    }
+
+    #[test]
     fn test_tail_creation() {
         let tail = Tail::new(10).unwrap();
         assert_eq!(tail.size(), 0);

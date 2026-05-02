@@ -169,6 +169,34 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
+    fn test_peaks_reset_clears_stats() {
+        let mut p = Peaks::new(4).unwrap();
+        for v in [1.0, 2.0, 3.0, 4.0, 5.0] {
+            p.push(v); // last push will wrap and erase 1.0
+        }
+        assert!(p.size() > 0);
+        assert!(!p.sum().is_nan());
+
+        p.reset();
+
+        assert_eq!(p.size(), 0);
+        assert_relative_eq!(p.sum(), 0.0);
+        assert_relative_eq!(p.sum_squares(), 0.0);
+        assert!(p.min().is_nan());
+        assert!(p.max().is_nan());
+        assert!(p.mean().is_nan());
+        assert!(p.variance().is_nan());
+
+        // After reset, accumulators rebuild correctly from scratch.
+        p.push(10.0);
+        p.push(20.0);
+        assert_eq!(p.size(), 2);
+        assert_relative_eq!(p.sum(), 30.0);
+        assert_relative_eq!(p.min(), 10.0);
+        assert_relative_eq!(p.max(), 20.0);
+    }
+
+    #[test]
     fn test_peaks_creation() {
         let peaks = Peaks::new(5).unwrap();
         assert_eq!(peaks.size(), 0);

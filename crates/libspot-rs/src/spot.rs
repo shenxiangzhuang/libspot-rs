@@ -415,6 +415,77 @@ mod tests {
     }
 
     #[test]
+    fn test_spot_reset_before_fit_is_noop_safe() {
+        // Calling reset on a freshly constructed detector must not panic
+        // and must leave the detector in the same observable state.
+        let mut spot = SpotDetector::new(SpotConfig::default()).unwrap();
+        spot.reset();
+        assert!(spot.anomaly_threshold().is_nan());
+        assert!(spot.excess_threshold().is_nan());
+        assert_eq!(spot.n(), 0);
+        assert_eq!(spot.nt(), 0);
+        assert_eq!(spot.tail_size(), 0);
+
+        // Fit still works normally afterwards.
+        let data: Vec<f64> = (0..500).map(|i| (i as f64 / 500.0) * 2.0 - 1.0).collect();
+        spot.fit(&data).unwrap();
+        assert!(!spot.anomaly_threshold().is_nan());
+    }
+
+    #[test]
+    fn test_spot_reset_is_idempotent() {
+        let mut spot = SpotDetector::new(SpotConfig::default()).unwrap();
+        let data: Vec<f64> = (0..500).map(|i| (i as f64 / 500.0) * 2.0 - 1.0).collect();
+        spot.fit(&data).unwrap();
+        for v in &data {
+            let _ = spot.step(*v).unwrap();
+        }
+
+        spot.reset();
+        let after_first_n = spot.n();
+        let after_first_nt = spot.nt();
+        let after_first_size = spot.tail_size();
+
+        spot.reset();
+        assert_eq!(spot.n(), after_first_n);
+        assert_eq!(spot.nt(), after_first_nt);
+        assert_eq!(spot.tail_size(), after_first_size);
+        assert!(spot.anomaly_threshold().is_nan());
+        assert!(spot.excess_threshold().is_nan());
+    }
+
+    #[test]
+    fn test_spot_reset_then_fit_then_step_full_cycle() {
+        // Full lifecycle: fit -> step -> reset -> fit again -> step again must
+        // produce the same step classifications as a fresh detector running
+        // the same fit+step sequence.
+        let config = SpotConfig::default();
+        let train: Vec<f64> = (0..1000).map(|i| (i as f64 / 1000.0) * 2.0 - 1.0).collect();
+        let probe: Vec<f64> = (0..200).map(|i| (i as f64 / 100.0) - 1.0).collect();
+
+        let mut reused = SpotDetector::new(config.clone()).unwrap();
+        reused.fit(&train).unwrap();
+        for v in &probe {
+            let _ = reused.step(*v).unwrap();
+        }
+        reused.reset();
+        reused.fit(&train).unwrap();
+        let reused_classifications: Vec<SpotStatus> =
+            probe.iter().map(|&v| reused.step(v).unwrap()).collect();
+
+        let mut fresh = SpotDetector::new(config).unwrap();
+        fresh.fit(&train).unwrap();
+        let fresh_classifications: Vec<SpotStatus> =
+            probe.iter().map(|&v| fresh.step(v).unwrap()).collect();
+
+        assert_eq!(reused_classifications, fresh_classifications);
+        assert_relative_eq!(reused.anomaly_threshold(), fresh.anomaly_threshold());
+        assert_relative_eq!(reused.excess_threshold(), fresh.excess_threshold());
+        assert_eq!(reused.nt(), fresh.nt());
+        assert_eq!(reused.n(), fresh.n());
+    }
+
+    #[test]
     fn test_spot_low_tail() {
         let config = SpotConfig {
             low_tail: true,
