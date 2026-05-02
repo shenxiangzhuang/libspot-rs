@@ -27,7 +27,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential pkg-config
+        sudo apt-get install -y build-essential pkg-config hyperfine
 
     - name: Build C library
       run: |
@@ -35,28 +35,33 @@ jobs:
         make clean
         make
 
-    - name: Build & run raw C basic example
-      id: run_c
+    - name: Build all 3 release binaries into /tmp
       run: |
+        set -euo pipefail
+
+        # Raw C: compile the wrapper crate's basic.c against the static lib.
+        # The submodule ships a different basic.c (smaller K, different format);
+        # the wrapper crate's version is the canonical source kept in sync with
+        # the Rust examples.
         cd crates/libspot
-        # Find the produced static archive (e.g. libspot.a.2.0b5 or libspot.a.3.0.0)
         ARCHIVE=$(ls libspot/dist/libspot.a.* | head -n1)
         echo "Using archive: $ARCHIVE"
-        # Use the wrapper crate's own examples/basic.c (kept in sync with the
-        # Rust examples for output format and K). The submodule may ship a
-        # different basic.c with a smaller K and different output format.
         cc -O2 -std=c99 -o /tmp/basic_c examples/basic.c -Ilibspot/include/ "$ARCHIVE" -lm
-        /tmp/basic_c | tee /tmp/out_c.txt
 
-    - name: Build & run Rust FFI basic example
-      run: |
-        cd crates/libspot
-        cargo run --release --example basic | tee /tmp/out_ffi.txt
+        # Rust FFI (release)
+        cargo build --release --example basic
+        cp target/release/examples/basic /tmp/basic_ffi
 
-    - name: Build & run pure-Rust basic example
+        # Pure Rust (release)
+        cd ../libspot-rs
+        cargo build --release --example basic
+        cp target/release/examples/basic /tmp/basic_pure
+
+    - name: Run each implementation once and capture output
       run: |
-        cd crates/libspot-rs
-        cargo run --release --example basic | tee /tmp/out_pure.txt
+        /tmp/basic_c    | tee /tmp/out_c.txt
+        /tmp/basic_ffi  | tee /tmp/out_ffi.txt
+        /tmp/basic_pure | tee /tmp/out_pure.txt
 
     - name: Compare ANOMALY/EXCESS/NORMAL/Z/T across the 3 implementations
       run: |
@@ -103,3 +108,22 @@ jobs:
         fi
 
         echo "All three implementations produced identical output."
+
+    - name: Benchmark all 3 implementations (release builds, 5 runs)
+      run: |
+        set -euo pipefail
+
+        hyperfine \
+          --warmup 1 \
+          --runs 5 \
+          --command-name 'raw C' /tmp/basic_c \
+          --command-name 'Rust FFI (libspot)' /tmp/basic_ffi \
+          --command-name 'Pure Rust (libspot-rs)' /tmp/basic_pure \
+          --export-markdown /tmp/bench.md
+
+        # Surface the benchmark table on the workflow run summary page.
+        {
+          echo '## Benchmark (release, hyperfine, warmup=1, runs=5)'
+          echo
+          cat /tmp/bench.md
+        } >> "$GITHUB_STEP_SUMMARY"
