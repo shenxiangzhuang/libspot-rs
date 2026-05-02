@@ -38,11 +38,14 @@ jobs:
     - name: Build & run raw C basic example
       id: run_c
       run: |
-        cd crates/libspot/libspot
-        # Find the produced static archive (e.g. libspot.a.2.0b5)
-        ARCHIVE=$(ls dist/libspot.a.* | head -n1)
+        cd crates/libspot
+        # Find the produced static archive (e.g. libspot.a.2.0b5 or libspot.a.3.0.0)
+        ARCHIVE=$(ls libspot/dist/libspot.a.* | head -n1)
         echo "Using archive: $ARCHIVE"
-        cc -O2 -std=c99 -o /tmp/basic_c examples/basic.c -Iinclude/ "$ARCHIVE" -lm
+        # Use the wrapper crate's own examples/basic.c (kept in sync with the
+        # Rust examples for output format and K). The submodule may ship a
+        # different basic.c with a smaller K and different output format.
+        cc -O2 -std=c99 -o /tmp/basic_c examples/basic.c -Ilibspot/include/ "$ARCHIVE" -lm
         /tmp/basic_c | tee /tmp/out_c.txt
 
     - name: Build & run Rust FFI basic example
