@@ -1,8 +1,6 @@
-use std::os::raw::{c_char, c_double, c_int, c_ulong, c_void};
+use std::os::raw::{c_char, c_double, c_int, c_ulong};
 
 // Function pointer types
-pub type MallocFn = unsafe extern "C" fn(size: usize) -> *mut c_void;
-pub type FreeFn = unsafe extern "C" fn(ptr: *mut c_void);
 pub type FrexpFn = unsafe extern "C" fn(value: c_double, exp: *mut c_int) -> c_double;
 pub type LdexpFn = unsafe extern "C" fn(value: c_double, exp: c_int) -> c_double;
 pub type MathFn = unsafe extern "C" fn(x: c_double) -> c_double;
@@ -57,15 +55,16 @@ extern "C" {
         low: c_int,
         discard_anomalies: c_int,
         level: c_double,
+        excesses: *mut c_double,
         max_excess: c_ulong,
     ) -> c_int;
-    pub fn spot_free(spot: *mut SpotRaw);
+    #[allow(dead_code)]
+    pub fn spot_reset(spot: *mut SpotRaw);
     pub fn spot_fit(spot: *mut SpotRaw, data: *const c_double, size: c_ulong) -> c_int;
     pub fn spot_step(spot: *mut SpotRaw, x: c_double) -> c_int;
     pub fn spot_quantile(spot: *const SpotRaw, q: c_double) -> c_double;
     pub fn libspot_version(buffer: *mut c_char, size: c_ulong);
     // pub fn libspot_error(err: c_int, buffer: *mut c_char, size: c_ulong);
-    pub fn set_allocators(m: MallocFn, f: FreeFn);
     pub fn set_float_utils(l: Option<LdexpFn>, f: Option<FrexpFn>);
     pub fn set_math_functions(lo: Option<MathFn>, ex: Option<MathFn>, po: Option<Math2Fn>);
 }

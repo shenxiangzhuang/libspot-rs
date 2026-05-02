@@ -10,19 +10,23 @@ use crate::status::SpotStatus;
 #[derive(Debug)]
 pub struct SpotDetector {
     raw: MaybeUninit<SpotRaw>,
+    // Backing buffer for the excesses (tail data). Owned by Rust; the raw
+    // pointer into this Vec is passed to C via spot_init and must remain
+    // valid for the lifetime of `raw`. The Vec is never resized after init.
+    excesses: Vec<f64>,
     initialized: bool,
 }
 
 impl SpotDetector {
     /// Create a new SPOT detector with the given configuration
     pub fn new(config: SpotConfig) -> SpotResult<Self> {
-        // Initialize allocators
-        unsafe {
-            ffi::set_allocators(libc::malloc, libc::free);
-        }
+        // Allocate the backing buffer. Capacity is fixed; no realloc will
+        // occur, so the pointer passed to C stays stable.
+        let excesses = vec![0.0f64; config.max_excess];
 
         let mut detector = SpotDetector {
             raw: MaybeUninit::uninit(),
+            excesses,
             initialized: false,
         };
 
@@ -33,6 +37,7 @@ impl SpotDetector {
                 if config.low_tail { 1 } else { 0 },
                 if config.discard_anomalies { 1 } else { 0 },
                 config.level,
+                detector.excesses.as_mut_ptr(),
                 config.max_excess as c_ulong,
             );
 
@@ -167,11 +172,7 @@ impl SpotDetector {
 
 impl Drop for SpotDetector {
     fn drop(&mut self) {
-        if self.initialized {
-            unsafe {
-                ffi::spot_free(self.raw.as_mut_ptr());
-            }
-        }
+        // C no longer owns any memory; `excesses` Vec is freed automatically.
     }
 }
 

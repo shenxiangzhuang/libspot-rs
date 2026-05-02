@@ -20,21 +20,21 @@ double rexp() { return -log(runif()); }
 int main() {
     // set random seed
     srand(1);
-    // provide allocators to libspot
-    set_allocators(malloc, free);
     // use stdlib math functions for better performance
     set_math_functions(log, exp, pow);
     // stack allocation
     struct Spot spot;
+    double buffer[200]; // backing buffer for the tail (v3.0.0)
     int status = 0;
     // init the structure with some parameters
     status = spot_init(
         &spot,
-        1e-4,  // q: anomaly probability
-        0,     // low: observe upper tail
-        1,     // discard_anomalies: flag anomalies
-        0.998, // level: tail quantile (the 1% higher values shapes the tail)
-        200    // max_excess: number of data to keep to summarize the tail
+        1e-4,   // q: anomaly probability
+        0,      // low: observe upper tail
+        1,      // discard_anomalies: flag anomalies
+        0.998,  // level: tail quantile (the 1% higher values shapes the tail)
+        buffer, // buffer: tail data backing array
+        200     // max_excess: number of data to keep to summarize the tail
     );
 
     if (status < 0) {
