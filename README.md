@@ -101,7 +101,7 @@ Both implementations provide identical results to the original C implementation.
 |   **Normal**    |    49,902,164    |   49,902,164 ✓     |     49,902,164 ✓       |
 |      **Z**      |     6.237668     |    6.237668 ✓      |      6.237668 ✓        |
 |      **T**      |     6.236165     |    6.236165 ✓      |      6.236165 ✓        |
-| **Performance** |  1.006 s ± 0.003 |  1.555 s ± 0.036   |    1.191 s ± 0.004     |
+| **Performance** | 1.006 s ± 0.003 s | 1.555 s ± 0.036 s | 1.191 s ± 0.004 s |
 
 **Benchmark setup** — Linux x86_64 (GitHub Actions `ubuntu-latest`), release build, [`hyperfine`](https://github.com/sharkdp/hyperfine) with `--warmup 1 --runs 5`. Numbers are reproduced on every PR by [`.github/workflows/test-consistency.yaml`](.github/workflows/test-consistency.yaml); see the workflow run summary for the exact table from the latest commit.
 
