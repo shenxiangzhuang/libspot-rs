@@ -1,6 +1,6 @@
 [package]
 name = "libspot"
-version = "2.0.0-beta.6.0"
+version = "3.0.0"
 edition = "2021"
 authors = ["Mathew Shen <datahonor@gmail.com>"]
 documentation = "https://docs.rs/libspot"
@@ -26,7 +26,7 @@ include = [
 cc = "1.0"
 
 [dependencies]
-libc = "0.2"
 
 [dev-dependencies]
+libc = "0.2"
 approx = "0.5.1"

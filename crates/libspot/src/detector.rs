@@ -10,19 +10,23 @@ use crate::status::SpotStatus;
 #[derive(Debug)]
 pub struct SpotDetector {
     raw: MaybeUninit<SpotRaw>,
+    // Backing buffer for the excesses (tail data). Owned by Rust; the raw
+    // pointer into this Vec is passed to C via spot_init and must remain
+    // valid for the lifetime of `raw`. The Vec is never resized after init.
+    excesses: Vec<f64>,
     initialized: bool,
 }
 
 impl SpotDetector {
     /// Create a new SPOT detector with the given configuration
     pub fn new(config: SpotConfig) -> SpotResult<Self> {
-        // Initialize allocators
-        unsafe {
-            ffi::set_allocators(libc::malloc, libc::free);
-        }
+        // Allocate the backing buffer. Capacity is fixed; no realloc will
+        // occur, so the pointer passed to C stays stable.
+        let excesses = vec![0.0f64; config.max_excess];
 
         let mut detector = SpotDetector {
             raw: MaybeUninit::uninit(),
+            excesses,
             initialized: false,
         };
 
@@ -33,6 +37,7 @@ impl SpotDetector {
                 if config.low_tail { 1 } else { 0 },
                 if config.discard_anomalies { 1 } else { 0 },
                 config.level,
+                detector.excesses.as_mut_ptr(),
                 config.max_excess as c_ulong,
             );
 
@@ -163,17 +168,23 @@ impl SpotDetector {
             (spot_ref.tail.gamma, spot_ref.tail.sigma)
         }
     }
-}
 
-impl Drop for SpotDetector {
-    fn drop(&mut self) {
-        if self.initialized {
-            unsafe {
-                ffi::spot_free(self.raw.as_mut_ptr());
-            }
+    /// Reset the detector's internal state, keeping the configuration and the
+    /// backing buffer. After calling this, `fit` must be called again before
+    /// further `step` calls.
+    pub fn reset(&mut self) {
+        if !self.initialized {
+            return;
+        }
+        unsafe {
+            ffi::spot_reset(self.raw.as_mut_ptr());
         }
     }
 }
 
-// Safety: SpotDetector can be safely sent between threads as long as it's not used concurrently
+// Safety: `SpotDetector` owns its `excesses` buffer (moved together with the
+// struct) and libspot itself uses no thread-local state, so transferring
+// ownership across threads is sound. We deliberately do NOT impl `Sync`:
+// `step`/`fit` mutate internal C state through a raw pointer, so shared
+// references must not be used concurrently.
 unsafe impl Send for SpotDetector {}

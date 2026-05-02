@@ -16,7 +16,7 @@ pub use error::{SpotError, SpotResult};
 pub use status::SpotStatus;
 
 // Re-export function pointer types for advanced users
-pub use ffi::{FreeFn, FrexpFn, LdexpFn, MallocFn, Math2Fn, MathFn};
+pub use ffi::{FrexpFn, LdexpFn, Math2Fn, MathFn};
 
 // Re-export commonly used types
 pub use std::os::raw::c_double as SpotFloat;
