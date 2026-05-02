@@ -1,0 +1,102 @@
+name: Test cross-implementation consistency
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  consistency:
+    name: Verify all 3 implementations produce identical basic-example output
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential pkg-config
+
+    - name: Build C library
+      run: |
+        cd crates/libspot/libspot
+        make clean
+        make
+
+    - name: Build & run raw C basic example
+      id: run_c
+      run: |
+        cd crates/libspot/libspot
+        # Find the produced static archive (e.g. libspot.a.2.0b5)
+        ARCHIVE=$(ls dist/libspot.a.* | head -n1)
+        echo "Using archive: $ARCHIVE"
+        cc -O2 -std=c99 -o /tmp/basic_c examples/basic.c -Iinclude/ "$ARCHIVE" -lm
+        /tmp/basic_c | tee /tmp/out_c.txt
+
+    - name: Build & run Rust FFI basic example
+      run: |
+        cd crates/libspot
+        cargo run --release --example basic | tee /tmp/out_ffi.txt
+
+    - name: Build & run pure-Rust basic example
+      run: |
+        cd crates/libspot-rs
+        cargo run --release --example basic | tee /tmp/out_pure.txt
+
+    - name: Compare ANOMALY/EXCESS/NORMAL/Z/T across the 3 implementations
+      run: |
+        set -euo pipefail
+
+        extract() {
+          # Extracts the two canonical lines into a normalized "key=value" form.
+          local file="$1"
+          local counts z_t
+          counts=$(grep -E '^ANOMALY=[0-9]+ EXCESS=[0-9]+ NORMAL=[0-9]+$' "$file" | tail -n1)
+          z_t=$(grep -E '^Z=[-0-9.]+ T=[-0-9.]+$' "$file" | tail -n1)
+          if [[ -z "$counts" || -z "$z_t" ]]; then
+            echo "ERROR: could not find canonical output lines in $file" >&2
+            cat "$file" >&2
+            exit 1
+          fi
+          printf '%s\n%s\n' "$counts" "$z_t"
+        }
+
+        C_OUT=$(extract /tmp/out_c.txt)
+        FFI_OUT=$(extract /tmp/out_ffi.txt)
+        PURE_OUT=$(extract /tmp/out_pure.txt)
+
+        echo "::group::Raw C"
+        echo "$C_OUT"
+        echo "::endgroup::"
+        echo "::group::Rust FFI (libspot)"
+        echo "$FFI_OUT"
+        echo "::endgroup::"
+        echo "::group::Pure Rust (libspot-rs)"
+        echo "$PURE_OUT"
+        echo "::endgroup::"
+
+        if [[ "$C_OUT" != "$FFI_OUT" ]]; then
+          echo "::error::Raw C and Rust FFI outputs differ"
+          diff <(echo "$C_OUT") <(echo "$FFI_OUT") || true
+          exit 1
+        fi
+
+        if [[ "$C_OUT" != "$PURE_OUT" ]]; then
+          echo "::error::Raw C and pure-Rust outputs differ"
+          diff <(echo "$C_OUT") <(echo "$PURE_OUT") || true
+          exit 1
+        fi
+
+        echo "All three implementations produced identical output."
