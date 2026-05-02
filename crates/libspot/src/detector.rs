@@ -168,13 +168,23 @@ impl SpotDetector {
             (spot_ref.tail.gamma, spot_ref.tail.sigma)
         }
     }
-}
 
-impl Drop for SpotDetector {
-    fn drop(&mut self) {
-        // C no longer owns any memory; `excesses` Vec is freed automatically.
+    /// Reset the detector's internal state, keeping the configuration and the
+    /// backing buffer. After calling this, `fit` must be called again before
+    /// further `step` calls.
+    pub fn reset(&mut self) {
+        if !self.initialized {
+            return;
+        }
+        unsafe {
+            ffi::spot_reset(self.raw.as_mut_ptr());
+        }
     }
 }
 
-// Safety: SpotDetector can be safely sent between threads as long as it's not used concurrently
+// Safety: `SpotDetector` owns its `excesses` buffer (moved together with the
+// struct) and libspot itself uses no thread-local state, so transferring
+// ownership across threads is sound. We deliberately do NOT impl `Sync`:
+// `step`/`fit` mutate internal C state through a raw pointer, so shared
+// references must not be used concurrently.
 unsafe impl Send for SpotDetector {}

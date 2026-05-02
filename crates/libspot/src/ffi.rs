@@ -58,7 +58,6 @@ extern "C" {
         excesses: *mut c_double,
         max_excess: c_ulong,
     ) -> c_int;
-    #[allow(dead_code)]
     pub fn spot_reset(spot: *mut SpotRaw);
     pub fn spot_fit(spot: *mut SpotRaw, data: *const c_double, size: c_ulong) -> c_int;
     pub fn spot_step(spot: *mut SpotRaw, x: c_double) -> c_int;

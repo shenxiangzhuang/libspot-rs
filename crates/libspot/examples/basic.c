@@ -11,6 +11,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+// Maximum number of excesses kept to summarize the tail. Used to size the
+// caller-provided buffer and as the `max_excess` parameter to spot_init.
+#define MAX_EXCESS 200
+
 // U(0, 1)
 double runif() { return (double)rand() / (double)RAND_MAX; }
 
@@ -24,17 +28,17 @@ int main() {
     set_math_functions(log, exp, pow);
     // stack allocation
     struct Spot spot;
-    double buffer[200]; // backing buffer for the tail (v3.0.0)
+    double buffer[MAX_EXCESS]; // backing buffer for the tail (v3.0.0)
     int status = 0;
     // init the structure with some parameters
     status = spot_init(
         &spot,
-        1e-4,   // q: anomaly probability
-        0,      // low: observe upper tail
-        1,      // discard_anomalies: flag anomalies
-        0.998,  // level: tail quantile (the 1% higher values shapes the tail)
-        buffer, // buffer: tail data backing array
-        200     // max_excess: number of data to keep to summarize the tail
+        1e-4,      // q: anomaly probability
+        0,         // low: observe upper tail
+        1,         // discard_anomalies: flag anomalies
+        0.998,     // level: tail quantile (the 1% higher values shapes the tail)
+        buffer,    // buffer: tail data backing array (must hold >= max_excess doubles)
+        MAX_EXCESS // max_excess: number of data to keep to summarize the tail
     );
 
     if (status < 0) {
