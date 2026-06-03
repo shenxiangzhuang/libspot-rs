@@ -166,11 +166,12 @@ impl SpotDetector {
 
     /// Fit the model using initial training data
     pub fn fit(&mut self, data: &[f64]) -> SpotResult<()> {
-        // Reset counters
+        // Reset learned state so repeated fits behave like fitting a fresh detector.
         self.nt = 0;
         self.n = data.len();
+        self.tail.reset();
 
-        // Compute excess threshold using P2 quantile estimator
+        // Compute the initial excess threshold.
         let et = if self.low {
             // Take the low quantile (1 - level)
             self.initial_quantile(1.0 - self.level, data)
@@ -374,7 +375,11 @@ impl SpotDetector {
 }
 
 fn empirical_quantile(level: f64, data: &[f64]) -> f64 {
-    let mut sorted: Vec<f64> = data.iter().copied().filter(|value| value.is_finite()).collect();
+    let mut sorted: Vec<f64> = data
+        .iter()
+        .copied()
+        .filter(|value| value.is_finite())
+        .collect();
     if sorted.is_empty() {
         return f64::NAN;
     }
@@ -638,6 +643,40 @@ mod tests {
         assert_relative_eq!(reused.excess_threshold(), fresh.excess_threshold());
         assert_eq!(reused.nt(), fresh.nt());
         assert_eq!(reused.n(), fresh.n());
+    }
+
+    #[test]
+    fn test_spot_repeated_fit_replaces_previous_tail() {
+        let config = SpotConfig {
+            level: 0.9,
+            ..SpotConfig::default()
+        };
+        let train_a: Vec<f64> = (0..100).map(|i| i as f64).collect();
+        let train_b: Vec<f64> = (0..50).map(|i| i as f64 * 0.5).collect();
+
+        let mut reused = SpotDetector::new_with_options(
+            config.clone(),
+            SpotEstimator::Best,
+            SpotInitialThreshold::Empirical,
+        )
+        .unwrap();
+        reused.fit(&train_a).unwrap();
+        reused.fit(&train_b).unwrap();
+
+        let mut fresh = SpotDetector::new_with_options(
+            config,
+            SpotEstimator::Best,
+            SpotInitialThreshold::Empirical,
+        )
+        .unwrap();
+        fresh.fit(&train_b).unwrap();
+
+        assert_eq!(reused.tail_size(), reused.nt());
+        assert_eq!(reused.tail_size(), fresh.tail_size());
+        assert_eq!(reused.nt(), fresh.nt());
+        assert_eq!(reused.n(), fresh.n());
+        assert_relative_eq!(reused.anomaly_threshold(), fresh.anomaly_threshold());
+        assert_relative_eq!(reused.excess_threshold(), fresh.excess_threshold());
     }
 
     #[test]
