@@ -12,14 +12,14 @@
 //!   To disable serialization support (e.g., for minimal dependencies), use:
 //!   ```toml
 //!   [dependencies]
-//!   libspot-rs = { version = "0.2", default-features = false }
+//!   libspot-rs = { version = "0.4.0-rc.1", default-features = false }
 //!   ```
 //!
 //! ## Example with Serialization
 //!
 //! ```toml
 //! [dependencies]
-//! libspot-rs = { version = "0.2" }  # serde is enabled by default
+//! libspot-rs = { version = "0.4.0-rc.1" }  # serde is enabled by default
 //! serde_json = "1.0"
 //! ```
 //!
