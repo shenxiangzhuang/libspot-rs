@@ -1,5 +1,45 @@
 //! Configuration types for SPOT detector
 
+/// GPD parameter estimator used by SPOT.
+///
+/// The default keeps the historical libspot-rs behavior: try the supported
+/// estimators and keep the fit with the best log-likelihood.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum SpotEstimator {
+    /// Try the available estimators and keep the best log-likelihood.
+    #[default]
+    Best,
+    /// Force Method of Moments estimation.
+    Mom,
+}
+
+/// Initial excess-threshold selection strategy.
+///
+/// The default keeps the historical libspot-rs behavior.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum SpotInitialThreshold {
+    /// Use the P2 streaming quantile estimator.
+    #[default]
+    P2,
+    /// Use the empirical sorted quantile from the initial batch.
+    Empirical,
+}
+
+/// Streaming excess update condition.
+///
+/// The default keeps the historical libspot-rs behavior.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum SpotExcessUpdate {
+    /// Update the tail when `value >= excess_threshold`.
+    #[default]
+    GreaterOrEqual,
+    /// Update the tail only when `value > excess_threshold`.
+    Greater,
+}
+
 /// Configuration parameters for SPOT detector
 ///
 /// # Serialization
@@ -71,5 +111,23 @@ mod tests {
         assert_eq!(config1.discard_anomalies, config2.discard_anomalies);
         assert_relative_eq!(config1.level, config2.level);
         assert_eq!(config1.max_excess, config2.max_excess);
+    }
+
+    #[test]
+    fn test_spot_estimator_default_keeps_existing_behavior() {
+        assert_eq!(SpotEstimator::default(), SpotEstimator::Best);
+    }
+
+    #[test]
+    fn test_spot_initial_threshold_default_keeps_existing_behavior() {
+        assert_eq!(SpotInitialThreshold::default(), SpotInitialThreshold::P2);
+    }
+
+    #[test]
+    fn test_spot_excess_update_default_keeps_existing_behavior() {
+        assert_eq!(
+            SpotExcessUpdate::default(),
+            SpotExcessUpdate::GreaterOrEqual
+        );
     }
 }

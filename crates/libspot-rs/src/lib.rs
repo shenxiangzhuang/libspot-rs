@@ -59,7 +59,7 @@ mod tail;
 mod ubend;
 
 // Re-export public types
-pub use config::SpotConfig;
+pub use config::{SpotConfig, SpotEstimator, SpotExcessUpdate, SpotInitialThreshold};
 pub use error::{SpotError, SpotResult};
 pub use peaks::Peaks;
 pub use spot::SpotDetector;

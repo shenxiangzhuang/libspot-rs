@@ -3,9 +3,10 @@
 //! This module implements the Tail structure that models the tail of a distribution
 //! using Generalized Pareto Distribution (GPD) parameters.
 
+use crate::config::SpotEstimator;
 use crate::error::SpotResult;
 
-use crate::estimator::{grimshaw_estimator, mom_estimator};
+use crate::estimator::{grimshaw_estimator, mom_estimator, mom_sample_variance_estimator};
 use crate::math::{xexp, xlog, xpow};
 use crate::peaks::Peaks;
 
@@ -50,13 +51,35 @@ impl Tail {
         self.peaks.reset();
     }
 
-    /// Fit the GPD parameters using the available estimators
-    /// Returns the log-likelihood of the best fit
+    /// Fit the GPD parameters using the default estimator policy.
+    ///
+    /// Returns the selected fit log-likelihood.
     pub fn fit(&mut self) -> f64 {
+        self.fit_with(SpotEstimator::Best)
+    }
+
+    /// Fit the GPD parameters using a selected estimator policy.
+    ///
+    /// Returns the selected fit log-likelihood.
+    pub fn fit_with(&mut self, estimator: SpotEstimator) -> f64 {
         if self.peaks.size() == 0 {
             return f64::NAN;
         }
 
+        match estimator {
+            SpotEstimator::Best => self.fit_best(),
+            SpotEstimator::Mom => self.fit_mom(),
+        }
+    }
+
+    fn fit_mom(&mut self) -> f64 {
+        let (gamma, sigma, llhood) = mom_sample_variance_estimator(&self.peaks);
+        self.gamma = gamma;
+        self.sigma = sigma;
+        llhood
+    }
+
+    fn fit_best(&mut self) -> f64 {
         // Match C implementation exactly: try each estimator and pick best
         let mut max_llhood = f64::NAN;
         let mut tmp_gamma;
@@ -223,6 +246,21 @@ mod tests {
         assert!(!tail.gamma().is_nan());
         assert!(!tail.sigma().is_nan());
         assert!(tail.sigma() > 0.0); // Sigma should be positive
+    }
+
+    #[test]
+    fn test_tail_fit_with_mom_estimator() {
+        let mut tail = Tail::new(10).unwrap();
+
+        for value in [1.0, 1.5, 2.0, 2.5, 3.0, 1.2, 1.8, 2.2] {
+            tail.push(value);
+        }
+
+        let llhood = tail.fit_with(SpotEstimator::Mom);
+        assert!(!llhood.is_nan());
+        assert!(!tail.gamma().is_nan());
+        assert!(!tail.sigma().is_nan());
+        assert!(tail.sigma() > 0.0);
     }
 
     #[test]

@@ -7,7 +7,10 @@
 #![cfg(feature = "serde")]
 
 use approx::assert_relative_eq;
-use libspot_rs::{Peaks, SpotConfig, SpotDetector, SpotError, SpotStatus, Tail, Ubend};
+use libspot_rs::{
+    Peaks, SpotConfig, SpotDetector, SpotError, SpotEstimator, SpotExcessUpdate,
+    SpotInitialThreshold, SpotStatus, Tail, Ubend,
+};
 
 // ============================================================================
 // SpotConfig Serialization Tests
@@ -259,6 +262,65 @@ fn test_spot_detector_fitted_roundtrip() {
     let (deser_gamma, deser_sigma) = deserialized.tail_parameters();
     assert_relative_eq!(deser_gamma, orig_gamma);
     assert_relative_eq!(deser_sigma, orig_sigma);
+}
+
+#[test]
+fn test_spot_detector_mom_estimator_roundtrip() {
+    let config = SpotConfig {
+        q: 0.001,
+        level: 0.98,
+        max_excess: 10_000,
+        ..SpotConfig::default()
+    };
+    let mut original = SpotDetector::new_with_full_options(
+        config,
+        SpotEstimator::Mom,
+        SpotInitialThreshold::Empirical,
+        SpotExcessUpdate::Greater,
+    )
+    .unwrap();
+
+    let training_data: Vec<f64> = (0..1000)
+        .map(|i| {
+            let x = i as f64 * 0.1;
+            x.sin() + (x * 0.37).cos() * 0.1 + 5.0
+        })
+        .collect();
+    original.fit(&training_data).unwrap();
+
+    let json = serde_json::to_string(&original).unwrap();
+    let deserialized: SpotDetector = serde_json::from_str(&json).unwrap();
+
+    assert_eq!(deserialized.estimator(), SpotEstimator::Mom);
+    assert_eq!(
+        deserialized.initial_threshold(),
+        SpotInitialThreshold::Empirical
+    );
+    assert_eq!(deserialized.excess_update(), SpotExcessUpdate::Greater);
+    assert_eq!(deserialized.n(), original.n());
+    assert_eq!(deserialized.nt(), original.nt());
+    assert_relative_eq!(
+        deserialized.anomaly_threshold(),
+        original.anomaly_threshold()
+    );
+}
+
+#[test]
+fn test_spot_detector_missing_estimator_defaults_to_best() {
+    let original = SpotDetector::new(SpotConfig::default()).unwrap();
+    let mut json = serde_json::to_value(&original).unwrap();
+    json.as_object_mut().unwrap().remove("estimator");
+    json.as_object_mut().unwrap().remove("initial_threshold");
+    json.as_object_mut().unwrap().remove("excess_update");
+
+    let deserialized: SpotDetector = serde_json::from_value(json).unwrap();
+
+    assert_eq!(deserialized.estimator(), SpotEstimator::Best);
+    assert_eq!(deserialized.initial_threshold(), SpotInitialThreshold::P2);
+    assert_eq!(
+        deserialized.excess_update(),
+        SpotExcessUpdate::GreaterOrEqual
+    );
 }
 
 #[test]
