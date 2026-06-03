@@ -33,7 +33,7 @@
 //! let status = loaded.step(50.0);
 //! ```
 
-use crate::config::SpotConfig;
+use crate::config::{SpotConfig, SpotEstimator, SpotExcessUpdate, SpotInitialThreshold};
 
 use crate::error::{SpotError, SpotResult};
 use crate::p2::p2_quantile;
@@ -92,6 +92,15 @@ pub struct SpotDetector {
     nt: usize,
     /// Total number of seen data
     n: usize,
+    /// GPD parameter estimator policy
+    #[cfg_attr(feature = "serde", serde(default))]
+    estimator: SpotEstimator,
+    /// Initial excess threshold selection strategy
+    #[cfg_attr(feature = "serde", serde(default))]
+    initial_threshold: SpotInitialThreshold,
+    /// Streaming excess update condition
+    #[cfg_attr(feature = "serde", serde(default))]
+    excess_update: SpotExcessUpdate,
     /// GPD Tail
     tail: Tail,
 }
@@ -99,6 +108,35 @@ pub struct SpotDetector {
 impl SpotDetector {
     /// Create a new SPOT detector with the given configuration
     pub fn new(config: SpotConfig) -> SpotResult<Self> {
+        Self::new_with_estimator(config, SpotEstimator::default())
+    }
+
+    /// Create a new SPOT detector with the given configuration and estimator.
+    pub fn new_with_estimator(config: SpotConfig, estimator: SpotEstimator) -> SpotResult<Self> {
+        Self::new_with_options(config, estimator, SpotInitialThreshold::default())
+    }
+
+    /// Create a new SPOT detector with explicit estimator and initial threshold options.
+    pub fn new_with_options(
+        config: SpotConfig,
+        estimator: SpotEstimator,
+        initial_threshold: SpotInitialThreshold,
+    ) -> SpotResult<Self> {
+        Self::new_with_full_options(
+            config,
+            estimator,
+            initial_threshold,
+            SpotExcessUpdate::default(),
+        )
+    }
+
+    /// Create a new SPOT detector with all algorithm options explicit.
+    pub fn new_with_full_options(
+        config: SpotConfig,
+        estimator: SpotEstimator,
+        initial_threshold: SpotInitialThreshold,
+        excess_update: SpotExcessUpdate,
+    ) -> SpotResult<Self> {
         // Validate parameters
         if config.level < 0.0 || config.level >= 1.0 {
             return Err(SpotError::LevelOutOfBounds);
@@ -119,6 +157,9 @@ impl SpotDetector {
             excess_threshold: f64::NAN,
             nt: 0,
             n: 0,
+            estimator,
+            initial_threshold,
+            excess_update,
             tail: Tail::new(config.max_excess)?,
         })
     }
@@ -132,9 +173,9 @@ impl SpotDetector {
         // Compute excess threshold using P2 quantile estimator
         let et = if self.low {
             // Take the low quantile (1 - level)
-            p2_quantile(1.0 - self.level, data)
+            self.initial_quantile(1.0 - self.level, data)
         } else {
-            p2_quantile(self.level, data)
+            self.initial_quantile(self.level, data)
         };
 
         if et.is_nan() {
@@ -155,7 +196,7 @@ impl SpotDetector {
         }
 
         // Fit the tail with the pushed data
-        self.tail.fit();
+        self.tail.fit_with(self.estimator);
 
         // Compute first anomaly threshold
         self.anomaly_threshold = self.quantile(self.q);
@@ -180,17 +221,26 @@ impl SpotDetector {
         self.n += 1;
 
         let ex = self.up_down * (value - self.excess_threshold);
-        if ex >= 0.0 {
+        if self.should_update_excess(ex) {
             // Increment number of excesses
             self.nt += 1;
             self.tail.push(ex);
-            self.tail.fit();
+            self.tail.fit_with(self.estimator);
             // Update threshold
             self.anomaly_threshold = self.quantile(self.q);
             return Ok(SpotStatus::Excess);
         }
 
         Ok(SpotStatus::Normal)
+    }
+
+    /// Record a normal observation without updating the tail.
+    ///
+    /// This is useful when the caller has already decided to suppress a
+    /// missing or invalid sample but still wants the stream length to advance.
+    /// The regular [`step`](Self::step) API remains strict about `NaN` inputs.
+    pub fn observe_normal(&mut self) {
+        self.n += 1;
     }
 
     /// Get the quantile for a given probability
@@ -250,6 +300,21 @@ impl SpotDetector {
         (self.tail.gamma(), self.tail.sigma())
     }
 
+    /// Get the configured estimator policy.
+    pub fn estimator(&self) -> SpotEstimator {
+        self.estimator
+    }
+
+    /// Get the configured initial threshold strategy.
+    pub fn initial_threshold(&self) -> SpotInitialThreshold {
+        self.initial_threshold
+    }
+
+    /// Get the configured streaming excess update condition.
+    pub fn excess_update(&self) -> SpotExcessUpdate {
+        self.excess_update
+    }
+
     /// Reset the detector's internal state, keeping the configuration and the
     /// backing buffer. After calling this, [`fit`](Self::fit) must be called
     /// again before further [`step`](Self::step) calls.
@@ -292,6 +357,31 @@ impl SpotDetector {
     pub fn peaks_data(&self) -> Vec<f64> {
         self.tail.peaks().container().data()
     }
+
+    fn initial_quantile(&self, level: f64, data: &[f64]) -> f64 {
+        match self.initial_threshold {
+            SpotInitialThreshold::P2 => p2_quantile(level, data),
+            SpotInitialThreshold::Empirical => empirical_quantile(level, data),
+        }
+    }
+
+    fn should_update_excess(&self, excess: f64) -> bool {
+        match self.excess_update {
+            SpotExcessUpdate::GreaterOrEqual => excess >= 0.0,
+            SpotExcessUpdate::Greater => excess > 0.0,
+        }
+    }
+}
+
+fn empirical_quantile(level: f64, data: &[f64]) -> f64 {
+    let mut sorted: Vec<f64> = data.iter().copied().filter(|value| value.is_finite()).collect();
+    if sorted.is_empty() {
+        return f64::NAN;
+    }
+
+    sorted.sort_by(|a, b| a.total_cmp(b));
+    let index = ((level - level.floor()) * sorted.len() as f64) as usize;
+    sorted[index.min(sorted.len() - 1)]
 }
 
 #[cfg(test)]
@@ -312,6 +402,51 @@ mod tests {
         assert!(spot.excess_threshold().is_nan());
         assert_eq!(spot.n(), 0);
         assert_eq!(spot.nt(), 0);
+        assert_eq!(spot.estimator(), SpotEstimator::Best);
+        assert_eq!(spot.initial_threshold(), SpotInitialThreshold::P2);
+        assert_eq!(spot.excess_update(), SpotExcessUpdate::GreaterOrEqual);
+    }
+
+    #[test]
+    fn test_spot_creation_with_mom_estimator() {
+        let config = SpotConfig {
+            q: 0.001,
+            level: 0.98,
+            max_excess: 10_000,
+            ..SpotConfig::default()
+        };
+        let mut spot = SpotDetector::new_with_full_options(
+            config,
+            SpotEstimator::Mom,
+            SpotInitialThreshold::Empirical,
+            SpotExcessUpdate::Greater,
+        )
+        .unwrap();
+
+        let data: Vec<f64> = (0..1000)
+            .map(|i| {
+                let x = i as f64 * 0.1;
+                x.sin() + (x * 0.37).cos() * 0.1 + 5.0
+            })
+            .collect();
+
+        spot.fit(&data).unwrap();
+
+        assert_eq!(spot.estimator(), SpotEstimator::Mom);
+        assert_eq!(spot.initial_threshold(), SpotInitialThreshold::Empirical);
+        assert_eq!(spot.excess_update(), SpotExcessUpdate::Greater);
+        assert!(!spot.anomaly_threshold().is_nan());
+        assert_eq!(spot.step(5.5).unwrap(), SpotStatus::Normal);
+        assert_eq!(spot.step(100.0).unwrap(), SpotStatus::Anomaly);
+    }
+
+    #[test]
+    fn test_empirical_quantile_matches_sorted_index() {
+        let data = [5.0, 1.0, 3.0, 2.0, 4.0];
+
+        assert_relative_eq!(empirical_quantile(0.0, &data), 1.0);
+        assert_relative_eq!(empirical_quantile(0.5, &data), 3.0);
+        assert_relative_eq!(empirical_quantile(0.98, &data), 5.0);
     }
 
     #[test]
@@ -379,6 +514,26 @@ mod tests {
         let result = spot.step(f64::NAN);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), SpotError::DataIsNaN);
+    }
+
+    #[test]
+    fn test_spot_observe_normal_advances_count_only() {
+        let config = SpotConfig::default();
+        let mut spot = SpotDetector::new(config).unwrap();
+
+        let data: Vec<f64> = (0..1000).map(|i| (i as f64 / 1000.0) * 2.0 - 1.0).collect();
+        spot.fit(&data).unwrap();
+        let n = spot.n();
+        let nt = spot.nt();
+        let anomaly_threshold = spot.anomaly_threshold();
+        let excess_threshold = spot.excess_threshold();
+
+        spot.observe_normal();
+
+        assert_eq!(spot.n(), n + 1);
+        assert_eq!(spot.nt(), nt);
+        assert_relative_eq!(spot.anomaly_threshold(), anomaly_threshold);
+        assert_relative_eq!(spot.excess_threshold(), excess_threshold);
     }
 
     #[test]

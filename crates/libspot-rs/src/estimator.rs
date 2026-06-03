@@ -30,6 +30,34 @@ pub fn mom_estimator(peaks: &Peaks) -> (f64, f64, f64) {
     (gamma, sigma, log_likelihood)
 }
 
+/// Method of Moments estimator using sample variance.
+///
+/// This matches the MOM estimator used by FluxEV's SPOT integration.
+pub fn mom_sample_variance_estimator(peaks: &Peaks) -> (f64, f64, f64) {
+    let nt_local = peaks.size();
+    if nt_local < 2 {
+        return (f64::NAN, f64::NAN, f64::NAN);
+    }
+
+    let e = peaks.mean();
+    let mut sum_sq_delta = 0.0;
+    for &value in peaks.container().raw_data().iter().take(nt_local) {
+        let delta = value - e;
+        sum_sq_delta += delta * delta;
+    }
+    let v = sum_sq_delta / (nt_local as f64 - 1.0);
+
+    if e.is_nan() || v.is_nan() || v <= 0.0 {
+        return (f64::NAN, f64::NAN, f64::NAN);
+    }
+
+    let r = e * e / v;
+    let gamma = 0.5 * (1.0 - r);
+    let sigma = 0.5 * e * (1.0 + r);
+
+    (gamma, sigma, 0.0)
+}
+
 /// Grimshaw estimator for GPD parameters
 pub fn grimshaw_estimator(peaks: &Peaks) -> (f64, f64, f64) {
     let mini = peaks.min();
@@ -297,6 +325,21 @@ mod tests {
         assert!(!sigma.is_nan());
         assert!(!llhood.is_nan());
         assert!(sigma > 0.0); // Sigma should be positive
+    }
+
+    #[test]
+    fn test_mom_sample_variance_estimator_normal_case() {
+        let mut peaks = Peaks::new(10).unwrap();
+        for value in [1.0, 2.0, 3.0, 4.0] {
+            peaks.push(value);
+        }
+
+        let (gamma, sigma, llhood) = mom_sample_variance_estimator(&peaks);
+
+        assert!(gamma.is_finite());
+        assert!(sigma.is_finite());
+        assert!(sigma > 0.0);
+        assert_relative_eq!(llhood, 0.0);
     }
 
     #[test]

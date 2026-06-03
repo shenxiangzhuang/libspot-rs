@@ -36,6 +36,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Features
 
+### Estimator and threshold options
+
+`SpotDetector::new(config)` keeps the default behavior: it uses `SpotEstimator::Best`, the P2 initial threshold, and the historical `>=` excess update rule.
+
+To reproduce algorithms that explicitly use FluxEV-style MOM-SPOT, configure all options explicitly:
+
+```rust,ignore
+use libspot_rs::{
+    SpotConfig, SpotDetector, SpotEstimator, SpotExcessUpdate, SpotInitialThreshold,
+};
+
+let config = SpotConfig {
+    q: 0.001,
+    level: 0.98,
+    max_excess: 10_000,
+    ..SpotConfig::default()
+};
+
+let mut detector = SpotDetector::new_with_full_options(
+    config,
+    SpotEstimator::Mom,
+    SpotInitialThreshold::Empirical,
+    SpotExcessUpdate::Greater,
+)?;
+```
+
 ### Serialization (Model Persistence)
 
 Serialization support is **enabled by default**. SPOT detectors can be serialized and deserialized for model deployment:
