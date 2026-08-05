@@ -29,8 +29,7 @@ cargo add libspot-rs
 ## Quick Start
 
 Both implementations provide the same core SPOT lifecycle API, so existing
-`fit`/`step` integrations can switch crates by changing the import. The pure
-Rust crate additionally exposes a read-only `anomaly_score` tail percentile.
+`fit`/`step` integrations can switch crates by changing the import.
 
 ```rust
 // Choose your implementation:
@@ -50,7 +49,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Detect anomalies in real-time
     let test_value = 50.0; // This should be an anomaly
-    println!("Anomaly score: {:.6}", detector.anomaly_score(test_value));
     match detector.step(test_value)? {
         SpotStatus::Normal => println!("Normal data point"),
         SpotStatus::Excess => println!("In the tail distribution"),
@@ -60,26 +58,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
-
-## Anomaly Score
-
-For the oriented excess $y=a(x-t)$, the pure Rust implementation returns
-the conditional GPD percentile
-
-$$
-A(x)=\begin{cases}
-0, & y\le0,\\
-1-\left(1+\dfrac{\gamma y}{\sigma}\right)^{-1/\gamma},
-    & y>0,\ \gamma\ne0,\\
-1-\exp\left(-\dfrac{y}{\sigma}\right),
-    & y>0,\ \gamma=0.
-\end{cases}
-$$
-
-The score lies in $[0,1]$; values closer to 1 are more extreme. In a
-two-sided composition, the existing independent upper and lower detectors keep
-their current update behavior and the combined score is
-$\max(A_{\mathrm{upper}}, A_{\mathrm{lower}})$.
 
 ## Configuration
 
@@ -112,7 +90,6 @@ let config = SpotConfig {
 | **Cross-platform** | ⚠️ Build complexity | ✅ Easy |
 | **WebAssembly** | ❌ Limited support | ✅ Full support |
 | **Results** | ✅ Reference standard | ✅ Mathematically identical |
-| **Bounded anomaly score** | ❌ | ✅ GPD tail percentile in `[0, 1]` |
 | **Key Benefits** | Fast, Proven, Compatible | Safe, Portable, WebAssembly |
 | **Documentation** | [docs.rs/libspot](https://docs.rs/libspot) | [docs.rs/libspot-rs](https://docs.rs/libspot-rs) |
 
