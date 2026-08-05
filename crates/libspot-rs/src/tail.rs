@@ -149,6 +149,8 @@ impl Tail {
             return 1.0;
         }
 
+        // Unlike the C-compatible probability path, scoring uses ln_1p/exp_m1
+        // to avoid cancellation near the tail threshold.
         let hazard = if self.gamma == 0.0 {
             d / self.sigma
         } else {
