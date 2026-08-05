@@ -1,0 +1,7 @@
+[build]
+rustdocflags = [
+    "-D",
+    "warnings",
+    "--html-in-header",
+    "docs/katex-header.html",
+]

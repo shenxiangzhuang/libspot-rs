@@ -132,6 +132,39 @@ impl Tail {
         }
     }
 
+    /// Conditional GPD CDF for an excess, evaluated through the cumulative
+    /// hazard with `ln_1p` and `exp_m1` for precision near the tail threshold.
+    pub(crate) fn cdf(&self, d: f64) -> f64 {
+        if !self.gamma.is_finite() || !self.sigma.is_finite() || self.sigma <= 0.0 {
+            return f64::NAN;
+        }
+        if d.is_nan() {
+            return f64::NAN;
+        }
+        if d <= 0.0 {
+            return 0.0;
+        }
+
+        if self.gamma < 0.0 && d >= -self.sigma / self.gamma {
+            return 1.0;
+        }
+
+        // Unlike the C-compatible probability path, scoring uses ln_1p/exp_m1
+        // to avoid cancellation near the tail threshold.
+        let hazard = if self.gamma == 0.0 {
+            d / self.sigma
+        } else {
+            (self.gamma * d / self.sigma).ln_1p() / self.gamma
+        };
+
+        if hazard.is_nan() || hazard < 0.0 {
+            return f64::NAN;
+        }
+
+        // 1 - exp(-hazard), evaluated accurately when hazard is close to zero.
+        (-(-hazard).exp_m1()).clamp(0.0, 1.0)
+    }
+
     /// Compute the extreme quantile for given probability q
     /// s is the ratio Nt/n (an estimator of P(X>t) = 1-F(t))
     /// q is the desired low probability
@@ -174,6 +207,7 @@ impl Tail {
 mod tests {
     use super::*;
     use crate::error::SpotError;
+    use approx::assert_relative_eq;
 
     #[test]
     fn test_tail_reset_clears_gpd_params_and_peaks() {
@@ -313,6 +347,92 @@ mod tests {
         let p = tail.probability(0.1, 2.0);
         assert!(!p.is_nan());
         assert!(p >= 0.0);
+    }
+
+    #[test]
+    fn test_tail_cdf_exponential_tail() {
+        let mut tail = Tail::new(10).unwrap();
+        tail.gamma = 0.0;
+        tail.sigma = 2.0;
+
+        assert_eq!(tail.cdf(-1.0), 0.0);
+        assert_eq!(tail.cdf(0.0), 0.0);
+        assert_relative_eq!(tail.cdf(2.0), 1.0 - (-1.0_f64).exp(), epsilon = 1e-15);
+        assert_eq!(tail.cdf(f64::INFINITY), 1.0);
+    }
+
+    #[test]
+    fn test_tail_cdf_heavy_tail() {
+        let mut tail = Tail::new(10).unwrap();
+        tail.gamma = 0.5;
+        tail.sigma = 2.0;
+
+        let d = 4.0;
+        let expected = 1.0 - (1.0_f64 + tail.gamma * d / tail.sigma).powf(-1.0 / tail.gamma);
+        assert_relative_eq!(tail.cdf(d), expected, epsilon = 1e-15);
+    }
+
+    #[test]
+    fn test_tail_cdf_bounded_tail_reaches_one_at_endpoint() {
+        let mut tail = Tail::new(10).unwrap();
+        tail.gamma = -0.5;
+        tail.sigma = 2.0;
+
+        let endpoint = -tail.sigma / tail.gamma;
+        assert!(tail.cdf(endpoint - 1e-6) < 1.0);
+        assert_eq!(tail.cdf(endpoint), 1.0);
+        assert_eq!(tail.cdf(endpoint + 1.0), 1.0);
+        assert_eq!(tail.cdf(f64::INFINITY), 1.0);
+    }
+
+    #[test]
+    fn test_tail_cdf_is_monotone_for_all_tail_shapes() {
+        for gamma in [-0.25, 0.0, 0.5] {
+            let mut tail = Tail::new(10).unwrap();
+            tail.gamma = gamma;
+            tail.sigma = 2.0;
+
+            let upper = if gamma < 0.0 {
+                -tail.sigma / gamma
+            } else {
+                20.0
+            };
+            let mut previous = 0.0;
+            for i in 0..=100 {
+                let d = upper * i as f64 / 100.0;
+                let score = tail.cdf(d);
+                assert!((0.0..=1.0).contains(&score));
+                assert!(score >= previous, "gamma={gamma}, d={d}");
+                previous = score;
+            }
+        }
+    }
+
+    #[test]
+    fn test_tail_cdf_matches_conditional_survival() {
+        for gamma in [-0.25, 0.0, 0.5] {
+            let mut tail = Tail::new(10).unwrap();
+            tail.gamma = gamma;
+            tail.sigma = 2.0;
+
+            for d in [0.25, 0.5, 1.0, 2.0] {
+                let survival = tail.probability(1.0, d);
+                assert_relative_eq!(tail.cdf(d), 1.0 - survival, epsilon = 1e-14);
+            }
+        }
+    }
+
+    #[test]
+    fn test_tail_cdf_rejects_invalid_parameters_and_nan() {
+        let mut tail = Tail::new(10).unwrap();
+        assert!(tail.cdf(1.0).is_nan());
+
+        tail.gamma = 0.1;
+        tail.sigma = 0.0;
+        assert!(tail.cdf(1.0).is_nan());
+
+        tail.sigma = 1.0;
+        assert!(tail.cdf(f64::NAN).is_nan());
     }
 
     #[test]

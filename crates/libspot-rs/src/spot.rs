@@ -265,6 +265,56 @@ impl SpotDetector {
             .probability(s, self.up_down * (z - self.excess_threshold))
     }
 
+    /// Return a bounded anomaly score derived from the fitted GPD tail.
+    ///
+    /// The score is the conditional percentile of `value` inside the selected
+    /// tail. It is defined from the Generalized Pareto survival function as:
+    ///
+    /// $$
+    /// y(x) = a(x-t), \qquad
+    /// a = \begin{cases} 1 & \text{upper tail}, \\\\ -1 & \text{lower tail}. \end{cases}
+    /// $$
+    ///
+    /// $$
+    /// A(x) = \begin{cases}
+    /// 0, & y \le 0, \\\\
+    /// 1-\left(1+\dfrac{\gamma y}{\sigma}\right)^{-1/\gamma},
+    ///     & y>0,\ \gamma\ne0, \\\\
+    /// 1-\exp\left(-\dfrac{y}{\sigma}\right), & y>0,\ \gamma=0.
+    /// \end{cases}
+    /// $$
+    ///
+    /// `up_down` is `1` for the upper tail and `-1` for the lower tail, so
+    /// the same equation applies to both modes.
+    ///
+    /// # Interpretation
+    ///
+    /// - `0` means that `value` has not entered the modeled tail.
+    /// - Values closer to `1` are more extreme within that tail.
+    /// - At the current SPOT anomaly threshold $z_q$, the score is
+    ///   $A(z_q)=1-q/s$, where $s=N_t/n$ is the observed tail fraction.
+    ///
+    /// This is a tail percentile, not the posterior probability that the
+    /// observation is anomalous. Classification and model updates remain the
+    /// responsibility of [`step`](Self::step); this method never mutates the
+    /// detector. For a two-sided detector composed from independent upper and
+    /// lower [`SpotDetector`] instances, compute both scores and take their
+    /// maximum without changing either detector's existing update policy.
+    ///
+    /// # Invalid state
+    ///
+    /// Returns `NaN` for a `NaN` input or when the detector has not been fitted
+    /// with valid GPD parameters. Infinite values in the modeled direction
+    /// receive a score of `1`.
+    pub fn anomaly_score(&self, value: f64) -> f64 {
+        if value.is_nan() || self.n == 0 || self.excess_threshold.is_nan() {
+            return f64::NAN;
+        }
+
+        let excess = self.up_down * (value - self.excess_threshold);
+        self.tail.cdf(excess)
+    }
+
     /// Get the current anomaly threshold
     pub fn anomaly_threshold(&self) -> f64 {
         self.anomaly_threshold
@@ -732,6 +782,137 @@ mod tests {
         let p = spot.probability(q);
         assert!(!p.is_nan());
         assert!(p >= 0.0);
+    }
+
+    fn score_test_detector(low_tail: bool) -> SpotDetector {
+        let config = SpotConfig {
+            q: 0.001,
+            low_tail,
+            discard_anomalies: true,
+            level: 0.9,
+            max_excess: 200,
+        };
+        let mut spot = SpotDetector::new_with_options(
+            config,
+            SpotEstimator::Best,
+            SpotInitialThreshold::Empirical,
+        )
+        .unwrap();
+        let data: Vec<f64> = (0..1000)
+            .map(|i| {
+                let x = i as f64 * 0.031;
+                x.sin() + 0.2 * (x * 0.37).cos()
+            })
+            .collect();
+        spot.fit(&data).unwrap();
+        spot
+    }
+
+    #[test]
+    fn test_anomaly_score_requires_fitted_detector_and_valid_value() {
+        let spot = SpotDetector::new(SpotConfig::default()).unwrap();
+        assert!(spot.anomaly_score(1.0).is_nan());
+        assert!(spot.anomaly_score(f64::NAN).is_nan());
+    }
+
+    #[test]
+    fn test_anomaly_score_range_and_monotonicity_for_both_tails() {
+        for low_tail in [false, true] {
+            let spot = score_test_detector(low_tail);
+            let direction = if low_tail { -1.0 } else { 1.0 };
+            let threshold = spot.excess_threshold();
+            let anomaly_distance = direction * (spot.anomaly_threshold() - threshold);
+
+            assert_eq!(spot.anomaly_score(threshold - direction), 0.0);
+
+            let mut previous = 0.0;
+            for scale in [0.0, 0.25, 0.5, 1.0, 2.0] {
+                let value = threshold + direction * anomaly_distance * scale;
+                let score = spot.anomaly_score(value);
+
+                assert!((0.0..=1.0).contains(&score));
+                assert!(score >= previous, "low_tail={low_tail}, value={value}");
+                previous = score;
+            }
+        }
+    }
+
+    #[test]
+    fn test_anomaly_score_matches_probability_conditioned_on_tail() {
+        for low_tail in [false, true] {
+            let spot = score_test_detector(low_tail);
+            let t = spot.excess_threshold();
+            let z = spot.anomaly_threshold();
+            let value = (t + z) / 2.0;
+            let tail_fraction = spot.nt() as f64 / spot.n() as f64;
+
+            assert_relative_eq!(
+                spot.anomaly_score(value),
+                1.0 - spot.probability(value) / tail_fraction,
+                epsilon = 1e-8
+            );
+        }
+    }
+
+    #[test]
+    fn test_anomaly_score_is_read_only() {
+        let spot = score_test_detector(false);
+        let before = (
+            spot.n(),
+            spot.nt(),
+            spot.anomaly_threshold(),
+            spot.excess_threshold(),
+            spot.tail_parameters(),
+            spot.peaks_data(),
+        );
+
+        let _ = spot.anomaly_score(spot.anomaly_threshold() * 2.0);
+
+        assert_eq!(spot.n(), before.0);
+        assert_eq!(spot.nt(), before.1);
+        assert_eq!(spot.anomaly_threshold(), before.2);
+        assert_eq!(spot.excess_threshold(), before.3);
+        assert_eq!(spot.tail_parameters(), before.4);
+        assert_eq!(spot.peaks_data(), before.5);
+    }
+
+    #[test]
+    fn test_upper_and_lower_anomaly_scores_are_mirror_symmetric() {
+        let upper = score_test_detector(false);
+
+        let config = SpotConfig {
+            q: 0.001,
+            low_tail: true,
+            discard_anomalies: true,
+            level: 0.9,
+            max_excess: 200,
+        };
+        let mut lower = SpotDetector::new_with_options(
+            config,
+            SpotEstimator::Best,
+            SpotInitialThreshold::Empirical,
+        )
+        .unwrap();
+        let mirrored_data: Vec<f64> = (0..1000)
+            .map(|i| {
+                let x = i as f64 * 0.031;
+                -(x.sin() + 0.2 * (x * 0.37).cos())
+            })
+            .collect();
+        lower.fit(&mirrored_data).unwrap();
+
+        for value in [
+            upper.excess_threshold(),
+            (upper.excess_threshold() + upper.anomaly_threshold()) / 2.0,
+            upper.anomaly_threshold(),
+            upper.anomaly_threshold() * 1.5,
+        ] {
+            assert_relative_eq!(
+                upper.anomaly_score(value),
+                lower.anomaly_score(-value),
+                epsilon = 1e-12
+            );
+        }
     }
 
     #[test]

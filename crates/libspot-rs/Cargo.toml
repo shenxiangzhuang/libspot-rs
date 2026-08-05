@@ -13,11 +13,16 @@ keywords = ["Spot", "TimeSeries", "AnomalyDetection"]
 # Include style for pure Rust implementation
 include = [
     "src/**/*",
+    "docs/**/*",
     "examples/**/*",
     "tests/**/*",
     "./README.md",
     "./LICENSE",
 ]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["-D", "warnings", "--html-in-header", "docs/katex-header.html"]
 
 [features]
 default = ["serde"]

@@ -28,7 +28,8 @@ cargo add libspot-rs
 
 ## Quick Start
 
-Both implementations provide **identical APIs** - you can switch between them by just changing the crate import!
+Both implementations provide the same core SPOT lifecycle API, so existing
+`fit`/`step` integrations can switch crates by changing the import.
 
 ```rust
 // Choose your implementation:
@@ -58,6 +59,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## Configuration
+
 Both implementations support identical configuration:
 
 ```rust
@@ -80,7 +83,7 @@ let config = SpotConfig {
 |---------|-------------------|---------------------------|
 | **Installation** | `cargo add libspot` | `cargo add libspot-rs` |
 | **Type** | C FFI Bindings | Pure Rust Implementation |
-| **API** | ✅ Identical | ✅ Identical |
+| **Core API** | ✅ Reference API | ✅ Compatible |
 | **Performance** | ~1.55 s (50M samples) | ~1.19 s (50M samples) |
 | **Memory Safety** | ⚠️ Manual (C code) | ✅ Guaranteed |
 | **Dependencies** | 📦 C library + bindgen | 🎯 None |

@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## Features
+## Configuration
 
 ### Estimator and threshold options
 
@@ -62,7 +62,7 @@ let mut detector = SpotDetector::new_with_full_options(
 )?;
 ```
 
-### Serialization (Model Persistence)
+## Serialization (Model Persistence)
 
 Serialization support is **enabled by default**. SPOT detectors can be serialized and deserialized for model deployment:
 
