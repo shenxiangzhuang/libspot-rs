@@ -78,7 +78,7 @@ detectors and combine their read-only scores with `upper_score.max(lower_score)`
 Each detector continues to update its own state through `step` exactly as
 before.
 
-## Features
+## Configuration
 
 ### Estimator and threshold options
 
@@ -106,7 +106,7 @@ let mut detector = SpotDetector::new_with_full_options(
 )?;
 ```
 
-### Serialization (Model Persistence)
+## Serialization (Model Persistence)
 
 Serialization support is **enabled by default**. SPOT detectors can be serialized and deserialized for model deployment:
 

@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-### Bounded anomaly score (pure Rust)
+## Anomaly Score
 
 For the oriented excess $y=a(x-t)$, the pure Rust implementation returns
 the conditional GPD percentile
@@ -80,6 +80,8 @@ The score lies in $[0,1]$; values closer to 1 are more extreme. In a
 two-sided composition, the existing independent upper and lower detectors keep
 their current update behavior and the combined score is
 $\max(A_{\mathrm{upper}}, A_{\mathrm{lower}})$.
+
+## Configuration
 
 Both implementations support identical configuration:
 
