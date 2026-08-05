@@ -24,6 +24,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Detect anomalies in real-time
     let test_value = 50.0; // This should be an anomaly
+    let score = detector.anomaly_score(test_value);
+    println!("Anomaly score: {score:.6}");
+
     match detector.step(test_value)? {
         SpotStatus::Normal => println!("Normal data point"),
         SpotStatus::Excess => println!("In the tail distribution"),
@@ -33,6 +36,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+## Anomaly score
+
+`SpotDetector::anomaly_score(value)` converts the fitted Generalized Pareto
+tail into a bounded conditional percentile. Let
+
+$$
+y(x)=a(x-t),\qquad
+a=\begin{cases}
+1 & \text{upper tail},\\
+-1 & \text{lower tail}.
+\end{cases}
+$$
+
+Then the score is the GPD cumulative distribution:
+
+$$
+A(x)=\begin{cases}
+0, & y\le0,\\
+1-\left(1+\dfrac{\gamma y}{\sigma}\right)^{-1/\gamma},
+    & y>0,\ \gamma\ne0,\\
+1-\exp\left(-\dfrac{y}{\sigma}\right),
+    & y>0,\ \gamma=0.
+\end{cases}
+$$
+
+The score is `0` outside the modeled tail and approaches `1` for increasingly
+extreme observations. It is a percentile within the selected tail, not the
+posterior probability that the observation is anomalous. The method is
+read-only: it does not change counters, peaks, fitted parameters, or thresholds.
+
+At the current anomaly threshold `z_q`, the expected score is:
+
+$$
+A(z_q)=1-\frac{q}{s},\qquad s=\frac{N_t}{n}.
+$$
+
+For two-sided detection, keep the existing independent upper- and lower-tail
+detectors and combine their read-only scores with `upper_score.max(lower_score)`.
+Each detector continues to update its own state through `step` exactly as
+before.
 
 ## Features
 
