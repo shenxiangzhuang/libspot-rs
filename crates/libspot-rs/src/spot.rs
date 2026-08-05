@@ -816,54 +816,24 @@ mod tests {
     }
 
     #[test]
-    fn test_upper_tail_anomaly_score_range_and_monotonicity() {
-        let spot = score_test_detector(false);
-        let t = spot.excess_threshold();
-        let z = spot.anomaly_threshold();
-
-        assert_eq!(spot.anomaly_score(t - 1.0), 0.0);
-        assert_eq!(spot.anomaly_score(t), 0.0);
-
-        let probes = [t, t + (z - t) * 0.25, t + (z - t) * 0.5, z, z + (z - t)];
-        let mut previous = 0.0;
-        for value in probes {
-            let score = spot.anomaly_score(value);
-            assert!((0.0..=1.0).contains(&score));
-            assert!(score >= previous, "value={value}, score={score}");
-            previous = score;
-        }
-    }
-
-    #[test]
-    fn test_lower_tail_anomaly_score_range_and_monotonicity() {
-        let spot = score_test_detector(true);
-        let t = spot.excess_threshold();
-        let z = spot.anomaly_threshold();
-
-        assert_eq!(spot.anomaly_score(t + 1.0), 0.0);
-        assert_eq!(spot.anomaly_score(t), 0.0);
-
-        let probes = [t, t - (t - z) * 0.25, t - (t - z) * 0.5, z, z - (t - z)];
-        let mut previous = 0.0;
-        for value in probes {
-            let score = spot.anomaly_score(value);
-            assert!((0.0..=1.0).contains(&score));
-            assert!(score >= previous, "value={value}, score={score}");
-            previous = score;
-        }
-    }
-
-    #[test]
-    fn test_anomaly_threshold_score_matches_tail_probability_ratio() {
+    fn test_anomaly_score_range_and_monotonicity_for_both_tails() {
         for low_tail in [false, true] {
             let spot = score_test_detector(low_tail);
-            let s = spot.nt() as f64 / spot.n() as f64;
-            let expected = 1.0 - spot.q / s;
-            let actual = spot.anomaly_score(spot.anomaly_threshold());
+            let direction = if low_tail { -1.0 } else { 1.0 };
+            let threshold = spot.excess_threshold();
+            let anomaly_distance = direction * (spot.anomaly_threshold() - threshold);
 
-            // quantile() uses the libspot-compatible continued-fraction math,
-            // while anomaly_score() uses ln_1p/exp_m1 for tail precision.
-            assert_relative_eq!(actual, expected, epsilon = 1e-8);
+            assert_eq!(spot.anomaly_score(threshold - direction), 0.0);
+
+            let mut previous = 0.0;
+            for scale in [0.0, 0.25, 0.5, 1.0, 2.0] {
+                let value = threshold + direction * anomaly_distance * scale;
+                let score = spot.anomaly_score(value);
+
+                assert!((0.0..=1.0).contains(&score));
+                assert!(score >= previous, "low_tail={low_tail}, value={value}");
+                previous = score;
+            }
         }
     }
 

@@ -132,26 +132,8 @@ impl Tail {
         }
     }
 
-    /// Compute the Generalized Pareto conditional cumulative distribution.
-    ///
-    /// For an excess `d >= 0`, this returns the fraction of tail observations
-    /// that are expected to be no more extreme than `d`:
-    ///
-    /// $$
-    /// G(d)=\begin{cases}
-    /// 1-\left(1+\dfrac{\gamma d}{\sigma}\right)^{-1/\gamma},
-    ///     & \gamma\ne0, \\\\
-    /// 1-\exp\left(-\dfrac{d}{\sigma}\right), & \gamma=0.
-    /// \end{cases}
-    /// $$
-    ///
-    /// The result is in `[0, 1]`. Values at or below the start of the tail
-    /// return `0`. For a bounded tail (`gamma < 0`), values at or beyond the
-    /// finite endpoint `-sigma / gamma` return `1`.
-    ///
-    /// This is evaluated through the cumulative hazard
-    /// `H(d) = -ln(1 - G(d))`, using `ln_1p` and `exp_m1` to retain precision
-    /// close to the excess threshold.
+    /// Conditional GPD CDF for an excess, evaluated through the cumulative
+    /// hazard with `ln_1p` and `exp_m1` for precision near the tail threshold.
     pub(crate) fn cdf(&self, d: f64) -> f64 {
         if !self.gamma.is_finite() || !self.sigma.is_finite() || self.sigma <= 0.0 {
             return f64::NAN;
