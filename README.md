@@ -89,31 +89,28 @@ let config = SpotConfig {
 | **Dependencies** | 📦 C library + bindgen | 🎯 None |
 | **Cross-platform** | ⚠️ Build complexity | ✅ Easy |
 | **WebAssembly** | ❌ Limited support | ✅ Full support |
-| **Results** | ✅ Reference standard | ✅ Mathematically identical |
+| **Results** | Matches bundled C | P² fix from C 3.1.0 |
 | **Key Benefits** | Fast, Proven, Compatible | Safe, Portable, WebAssembly |
 | **Documentation** | [docs.rs/libspot](https://docs.rs/libspot) | [docs.rs/libspot-rs](https://docs.rs/libspot-rs) |
 
 ## Correctness & Performance
 
-Both implementations provide identical results to the original C implementation. Benchmark tests process 50M samples and produce mathematically equivalent anomaly counts and thresholds:
+`libspot-rs 0.4.0-rc.3` includes the P² extrema marker fix from
+[libspot 3.1.0](https://github.com/asiffer/libspot/pull/42). The FFI crate retains
+its existing C dependency, so newly fitted models can produce different
+thresholds and classifications between the two Rust implementations.
 
-|     Metric      | C Implementation | Rust Wrapper (FFI) | Pure Rust (libspot-rs) |
-|:---------------:|:----------------:|:------------------:|:----------------------:|
-|  **Anomalies**  |      90,007      |     90,007 ✓       |       90,007 ✓         |
-|   **Excess**    |       7,829      |      7,829 ✓       |        7,829 ✓         |
-|   **Normal**    |    49,902,164    |   49,902,164 ✓     |     49,902,164 ✓       |
-|      **Z**      |     6.237668     |    6.237668 ✓      |      6.237668 ✓        |
-|      **T**      |     6.236165     |    6.236165 ✓      |      6.236165 ✓        |
-| **Performance** | 1.006 s ± 0.003 s | 1.555 s ± 0.036 s | 1.191 s ± 0.004 s |
-
-**Benchmark setup** — Linux x86_64 (GitHub Actions `ubuntu-latest`), release build, [`hyperfine`](https://github.com/sharkdp/hyperfine) with `--warmup 1 --runs 5`. Numbers are reproduced on every PR by [`.github/workflows/test-consistency.yaml`](.github/workflows/test-consistency.yaml); see the workflow run summary for the exact table from the latest commit.
+CI checks FFI against its bundled C version and pure Rust against a separate,
+pinned libspot 3.1.0 reference. It compares anomaly/excess/normal counts and
+thresholds to the printed precision, then benchmarks all four binaries on 50M
+samples. See the [workflow run summaries](https://github.com/shenxiangzhuang/libspot-rs/actions/workflows/test-consistency.yaml)
+for current results and timings (Linux x86_64, release builds, `hyperfine
+--warmup 1 --runs 5`).
 
 **Benchmark Commands:**
 - **Pure Rust**: `cargo run -r --example basic` (in `crates/libspot-rs`)
 - **C FFI**: `cargo run -r --example basic` (in `crates/libspot`)
 - **Original C**: `cd crates/libspot/libspot && make && cc -O3 -o /tmp/basic ../examples/basic.c dist/libspot.a.$(cat version) -Idist/ -lm && /tmp/basic`
-
-All three implementations agree on every count and threshold to the printed precision. Performance-wise, the raw C library is the baseline; the pure-Rust port stays close (~1.18× C), while the FFI wrapper pays a ~1.55× C overhead due to per-step Rust↔C transitions across 50M iterations.
 
 ## Documentation
 

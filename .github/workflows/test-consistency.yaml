@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   consistency:
-    name: Verify all 3 implementations produce identical basic-example output
+    name: Verify each Rust implementation against its C reference
     runs-on: ubuntu-latest
 
     steps:
@@ -24,6 +24,14 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
+
+    # Pure Rust includes the P² fix; the FFI submodule remains unchanged.
+    - name: Checkout C reference for pure Rust (libspot 3.1.0)
+      uses: actions/checkout@v4
+      with:
+        repository: asiffer/libspot
+        ref: d57e921a08930b960d07adcbec3a839bd228fe94 # v3.1.0
+        path: .reference-libspot
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -39,7 +47,10 @@ jobs:
         make clean
         make
 
-    - name: Build all 3 release binaries into /tmp
+    - name: Build C reference for pure Rust
+      run: make -C .reference-libspot
+
+    - name: Build all 4 release binaries into /tmp
       run: |
         set -euo pipefail
 
@@ -51,6 +62,12 @@ jobs:
         ARCHIVE=$(ls libspot/dist/libspot.a.* | head -n1)
         echo "Using archive: $ARCHIVE"
         cc -O2 -std=c99 -o /tmp/basic_c examples/basic.c -Ilibspot/include/ "$ARCHIVE" -lm
+
+        # Fixed upstream C reference, without changing the FFI dependency.
+        cd ../..
+        REFERENCE_ARCHIVE=$(ls .reference-libspot/dist/libspot.a.* | head -n1)
+        cc -O2 -std=c99 -o /tmp/basic_c_reference crates/libspot/examples/basic.c -I.reference-libspot/include/ "$REFERENCE_ARCHIVE" -lm
+        cd crates/libspot
 
         # Rust FFI (release)
         cargo build --release --example basic
@@ -66,8 +83,9 @@ jobs:
         /tmp/basic_c    | tee /tmp/out_c.txt
         /tmp/basic_ffi  | tee /tmp/out_ffi.txt
         /tmp/basic_pure | tee /tmp/out_pure.txt
+        /tmp/basic_c_reference | tee /tmp/out_c_reference.txt
 
-    - name: Compare ANOMALY/EXCESS/NORMAL/Z/T across the 3 implementations
+    - name: Compare ANOMALY/EXCESS/NORMAL/Z/T against the matching C versions
       run: |
         set -euo pipefail
 
@@ -88,6 +106,7 @@ jobs:
         C_OUT=$(extract /tmp/out_c.txt)
         FFI_OUT=$(extract /tmp/out_ffi.txt)
         PURE_OUT=$(extract /tmp/out_pure.txt)
+        REFERENCE_OUT=$(extract /tmp/out_c_reference.txt)
 
         echo "::group::Raw C"
         echo "$C_OUT"
@@ -105,13 +124,13 @@ jobs:
           exit 1
         fi
 
-        if [[ "$C_OUT" != "$PURE_OUT" ]]; then
-          echo "::error::Raw C and pure-Rust outputs differ"
-          diff <(echo "$C_OUT") <(echo "$PURE_OUT") || true
+        if [[ "$REFERENCE_OUT" != "$PURE_OUT" ]]; then
+          echo "::error::C 3.1.0 and pure-Rust outputs differ"
+          diff <(echo "$REFERENCE_OUT") <(echo "$PURE_OUT") || true
           exit 1
         fi
 
-        echo "All three implementations produced identical output."
+        echo "Each Rust implementation matches its C reference."
 
         # Build a markdown table for the workflow summary / PR comment.
         c_counts=$(grep -E '^ANOMALY=' /tmp/out_c.txt    | tail -n1)
@@ -121,6 +140,9 @@ jobs:
         p_counts=$(grep -E '^ANOMALY=' /tmp/out_pure.txt | tail -n1)
         p_zt=$(grep    -E '^Z='       /tmp/out_pure.txt | tail -n1)
 
+        r_counts=$(grep -E '^ANOMALY=' /tmp/out_c_reference.txt | tail -n1)
+        r_zt=$(grep -E '^Z=' /tmp/out_c_reference.txt | tail -n1)
+
         # ANOMALY=N EXCESS=N NORMAL=N  -> three values
         read -r c_a c_e c_n <<<"$(echo "$c_counts" | sed -E 's/[A-Z]+=//g')"
         read -r f_a f_e f_n <<<"$(echo "$f_counts" | sed -E 's/[A-Z]+=//g')"
@@ -129,24 +151,28 @@ jobs:
         read -r f_z f_t     <<<"$(echo "$f_zt"     | sed -E 's/[A-Z]+=//g')"
         read -r p_z p_t     <<<"$(echo "$p_zt"     | sed -E 's/[A-Z]+=//g')"
 
+        read -r r_a r_e r_n <<<"$(echo "$r_counts" | sed -E 's/[A-Z]+=//g')"
+        read -r r_z r_t <<<"$(echo "$r_zt" | sed -E 's/[A-Z]+=//g')"
+
         {
-          echo '| Metric | C | Rust FFI | Pure Rust |'
-          echo '|---|---:|---:|---:|'
-          printf '| Anomalies | %s | %s | %s |\n' "$c_a" "$f_a" "$p_a"
-          printf '| Excess    | %s | %s | %s |\n' "$c_e" "$f_e" "$p_e"
-          printf '| Normal    | %s | %s | %s |\n' "$c_n" "$f_n" "$p_n"
-          printf '| Z         | %s | %s | %s |\n' "$c_z" "$f_z" "$p_z"
-          printf '| T         | %s | %s | %s |\n' "$c_t" "$f_t" "$p_t"
+          echo '| Metric | Bundled C | Rust FFI | C 3.1.0 | Pure Rust |'
+          echo '|---|---:|---:|---:|---:|'
+          printf '| Anomalies | %s | %s | %s | %s |\n' "$c_a" "$f_a" "$r_a" "$p_a"
+          printf '| Excess    | %s | %s | %s | %s |\n' "$c_e" "$f_e" "$r_e" "$p_e"
+          printf '| Normal    | %s | %s | %s | %s |\n' "$c_n" "$f_n" "$r_n" "$p_n"
+          printf '| Z         | %s | %s | %s | %s |\n' "$c_z" "$f_z" "$r_z" "$p_z"
+          printf '| T         | %s | %s | %s | %s |\n' "$c_t" "$f_t" "$r_t" "$p_t"
         } > /tmp/consistency.md
 
-    - name: Benchmark all 3 implementations (release builds, 5 runs)
+    - name: Benchmark all 4 implementations (release builds, 5 runs)
       run: |
         set -euo pipefail
 
         hyperfine \
           --warmup 1 \
           --runs 5 \
-          --command-name 'raw C' /tmp/basic_c \
+          --command-name 'bundled C' /tmp/basic_c \
+          --command-name 'C 3.1.0' /tmp/basic_c_reference \
           --command-name 'Rust FFI (libspot)' /tmp/basic_ffi \
           --command-name 'Pure Rust (libspot-rs)' /tmp/basic_pure \
           --export-markdown /tmp/bench.md

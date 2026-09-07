@@ -6,6 +6,17 @@
 
 A pure Rust implementation of the [SPOT (Streaming Peaks Over Threshold)](https://github.com/asiffer/libspot) algorithm for real-time anomaly detection in time series data.
 
+## 0.4.0-rc.3
+
+Fix P² marker updates for observations that become a new minimum or maximum,
+matching [upstream libspot #42](https://github.com/asiffer/libspot/pull/42)
+(released in libspot 3.1.0). This corrects initial SPOT thresholds, especially
+for monotonic training data. Models fitted with the default P² threshold can
+produce different thresholds and classifications than earlier releases.
+Existing serialized models retain their stored thresholds until refitted;
+empirical initial thresholds are unaffected. The separate `libspot` FFI crate
+still uses its existing C version.
+
 ## Quick Start
 
 ```rust
@@ -68,14 +79,14 @@ Serialization support is **enabled by default**. SPOT detectors can be serialize
 
 ```toml
 [dependencies]
-libspot-rs = { version = "0.4.0-rc.2" }  # serde is enabled by default
+libspot-rs = { version = "0.4.0-rc.3" }  # serde is enabled by default
 serde_json = "1.0"
 ```
 
 To disable serialization support (e.g., for minimal dependencies), use:
 ```toml
 [dependencies]
-libspot-rs = { version = "0.4.0-rc.2", default-features = false }
+libspot-rs = { version = "0.4.0-rc.3", default-features = false }
 ```
 
 This enables:
