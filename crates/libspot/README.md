@@ -6,6 +6,20 @@
 
 A safe Rust wrapper (using FFI) for the [libspot](https://github.com/asiffer/libspot) time series anomaly detection library.
 
+## 3.1.0
+
+Bundles [libspot C 3.1.0](https://github.com/asiffer/libspot/releases/tag/v3.1.0),
+including the P² extrema marker update fix and quantile input validation fixes.
+The Rust API is unchanged. Refitting models can produce different thresholds
+and classifications than 3.0.0, especially with monotonic training data.
+Training data containing NaN is now consistently rejected with
+`SpotError::ExcessThresholdIsNaN`.
+
+```toml
+[dependencies]
+libspot = "3.1.0"
+```
+
 ## Quick Start
 
 ```rust

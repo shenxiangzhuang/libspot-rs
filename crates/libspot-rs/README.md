@@ -14,8 +14,7 @@ matching [upstream libspot #42](https://github.com/asiffer/libspot/pull/42)
 for monotonic training data. Models fitted with the default P² threshold can
 produce different thresholds and classifications than earlier releases.
 Existing serialized models retain their stored thresholds until refitted;
-empirical initial thresholds are unaffected. The separate `libspot` FFI crate
-still uses its existing C version.
+empirical initial thresholds are unaffected.
 
 ## Quick Start
 
