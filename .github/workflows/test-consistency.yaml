@@ -48,7 +48,8 @@ jobs:
         make
 
     - name: Build C reference for pure Rust
-      run: make -C .reference-libspot
+      # Match Rust's separate multiply/add rounding for numerical comparisons.
+      run: make -C .reference-libspot CMOREFLAGS=-ffp-contract=off
 
     - name: Build all 4 release binaries into /tmp
       run: |
