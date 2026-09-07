@@ -89,21 +89,20 @@ let config = SpotConfig {
 | **Dependencies** | 📦 C library + bindgen | 🎯 None |
 | **Cross-platform** | ⚠️ Build complexity | ✅ Easy |
 | **WebAssembly** | ❌ Limited support | ✅ Full support |
-| **Results** | Matches bundled C | P² fix from C 3.1.0 |
+| **Results** | Matches C 3.1.0 | Matches C 3.1.0 in consistency tests |
 | **Key Benefits** | Fast, Proven, Compatible | Safe, Portable, WebAssembly |
 | **Documentation** | [docs.rs/libspot](https://docs.rs/libspot) | [docs.rs/libspot-rs](https://docs.rs/libspot-rs) |
 
 ## Correctness & Performance
 
-`libspot-rs 0.4.0-rc.3` includes the P² extrema marker fix from
-[libspot 3.1.0](https://github.com/asiffer/libspot/pull/42). The FFI crate retains
-its existing C dependency, so newly fitted models can produce different
-thresholds and classifications between the two Rust implementations.
+`libspot 3.1.0` bundles [upstream C 3.1.0](https://github.com/asiffer/libspot/releases/tag/v3.1.0).
+Both it and `libspot-rs 0.4.0-rc.3` include the P² extrema marker fix from
+[upstream #42](https://github.com/asiffer/libspot/pull/42). Refitting models can
+produce different thresholds and classifications than earlier versions.
 
-CI checks FFI against its bundled C version and pure Rust against a separate,
-pinned libspot 3.1.0 reference. It compares anomaly/excess/normal counts and
-thresholds to the printed precision, then benchmarks all four binaries on 50M
-samples. See the [workflow run summaries](https://github.com/shenxiangzhuang/libspot-rs/actions/workflows/test-consistency.yaml)
+CI compares C, Rust FFI, and pure Rust directly: anomaly/excess/normal counts
+and thresholds must match to the printed precision. It then benchmarks all
+three binaries on 50M samples. See the [workflow run summaries](https://github.com/shenxiangzhuang/libspot-rs/actions/workflows/test-consistency.yaml)
 for current results and timings (Linux x86_64, release builds, `hyperfine
 --warmup 1 --runs 5`).
 

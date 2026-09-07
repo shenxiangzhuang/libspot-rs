@@ -198,8 +198,51 @@ fn test_config_retrieval() {
 #[test]
 fn test_version_function() {
     let version = libspot::version();
-    assert!(!version.is_empty(), "Version should not be empty");
+    assert_eq!(
+        version, "3.1.0",
+        "Should link the intended upstream release"
+    );
     println!("Library version: {version}");
+}
+
+/// New extrema must advance P² interior markers for both upper and lower tails.
+#[test]
+fn test_monotonic_training_updates_p2_threshold() {
+    let ascending: Vec<f64> = (1..=20).map(f64::from).collect();
+    let descending: Vec<f64> = ascending.iter().rev().copied().collect();
+
+    for low_tail in [false, true] {
+        for (data, expected) in [(&ascending, 10.0), (&descending, 11.0)] {
+            let mut detector = SpotDetector::new(SpotConfig {
+                q: 0.01,
+                level: 0.5,
+                low_tail,
+                ..SpotConfig::default()
+            })
+            .unwrap();
+            detector.fit(data).unwrap();
+
+            assert_eq!(detector.excess_threshold(), expected);
+            assert!(detector.anomaly_threshold().is_finite());
+        }
+    }
+}
+
+/// Upstream 3.1.0 rejects NaN during both P² initialization and later updates.
+#[test]
+fn test_training_rejects_nan_at_any_position() {
+    for index in 0..20 {
+        let mut data: Vec<f64> = (1..=20).map(f64::from).collect();
+        data[index] = f64::NAN;
+        let mut detector = SpotDetector::new(SpotConfig {
+            q: 0.01,
+            level: 0.5,
+            ..SpotConfig::default()
+        })
+        .unwrap();
+
+        assert_eq!(detector.fit(&data), Err(SpotError::ExcessThresholdIsNaN));
+    }
 }
 
 /// Test that detector properly handles different data sizes
