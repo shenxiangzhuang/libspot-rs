@@ -64,12 +64,12 @@ jobs:
     - name: Run integration tests (libspot-rs)
       run: |
         cd crates/libspot-rs
-        cargo test --test pure_rust_basic_example --verbose
+        cargo test --tests --all-features --verbose
 
-    - name: Run validation tests (libspot-rs)
+    - name: Test without default features (libspot-rs)
       run: |
         cd crates/libspot-rs
-        cargo test --test pure_rust_validation --verbose
+        cargo test --no-default-features --lib --tests --verbose
 
     - name: Run doc tests (libspot-rs)
       run: |

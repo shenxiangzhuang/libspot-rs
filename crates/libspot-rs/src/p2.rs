@@ -1,7 +1,7 @@
 //! P2 quantile estimator implementation
 //!
-//! This module implements the P² quantile estimator algorithm that matches
-//! the C implementation exactly. The P² algorithm is used to estimate quantiles
+//! This module implements the P² quantile estimator algorithm, including the
+//! extrema marker update fix from libspot 3.1.0. It estimates quantiles
 //! in a single pass through the data.
 
 /// P2 quantile estimator structure
@@ -59,50 +59,46 @@ impl P2 {
         // Process remaining values
         for j in 5..size {
             let xj = data[j];
-            let _k = if xj < self.q[0] {
+            let k = if xj < self.q[0] {
                 // Update first marker
                 self.q[0] = xj;
-                0 // This assignment isn't used but matches C code structure
+                0
             } else if xj > self.q[4] {
                 // Update last marker
                 self.q[4] = xj;
-                3 // This assignment isn't used but matches C code structure
+                3
             } else {
                 // Find position where q[k] < xj <= q[k+1]
                 let mut k = 0;
                 while k < 4 && xj > self.q[k] {
                     k += 1;
                 }
-                k = k.saturating_sub(1);
-
-                // Update marker positions for markers k+1 through 4
-                for i in (k + 1)..5 {
-                    self.n[i] += 1.0;
-                }
-
-                // Update desired positions for all markers
-                for i in 0..5 {
-                    self.np[i] += self.dn[i];
-                }
-
-                // Update other markers (1, 2, 3)
-                for i in 1..4 {
-                    let d = self.np[i] - self.n[i];
-                    if (d >= 1.0 && (self.n[i + 1] - self.n[i]) > 1.0)
-                        || (d <= -1.0 && (self.n[i - 1] - self.n[i]) < -1.0)
-                    {
-                        let d_sign = sign(d);
-                        let mut qp = self.parabolic(i, d_sign as i32);
-                        if !(self.q[i - 1] < qp && qp < self.q[i + 1]) {
-                            qp = self.linear(i, d_sign as i32);
-                        }
-                        self.q[i] = qp;
-                        self.n[i] += d_sign;
-                    }
-                }
-
-                k
+                k.saturating_sub(1)
             };
+
+            // Every observation, including a new extremum, advances positions.
+            for i in (k + 1)..5 {
+                self.n[i] += 1.0;
+            }
+            for i in 0..5 {
+                self.np[i] += self.dn[i];
+            }
+
+            // Update other markers (1, 2, 3)
+            for i in 1..4 {
+                let d = self.np[i] - self.n[i];
+                if (d >= 1.0 && (self.n[i + 1] - self.n[i]) > 1.0)
+                    || (d <= -1.0 && (self.n[i - 1] - self.n[i]) < -1.0)
+                {
+                    let d_sign = sign(d);
+                    let mut qp = self.parabolic(i, d_sign as i32);
+                    if !(self.q[i - 1] < qp && qp < self.q[i + 1]) {
+                        qp = self.linear(i, d_sign as i32);
+                    }
+                    self.q[i] = qp;
+                    self.n[i] += d_sign;
+                }
+            }
         }
 
         self.q[2] // Return the median marker
@@ -237,17 +233,27 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // P2 algorithm has known issues with quantile calculation
     fn test_p2_quantile_quartiles() {
         let data: Vec<f64> = (1..=100).map(|x| x as f64).collect();
 
         // Test first quartile (25th percentile)
         let q1 = p2_quantile(0.25, &data);
-        assert!((q1 - 25.0).abs() < 25.0); // Allow significant approximation error
+        assert!((q1 - 25.0).abs() < 2.0);
 
         // Test third quartile (75th percentile)
         let q3 = p2_quantile(0.75, &data);
-        assert!((q3 - 75.0).abs() < 25.0); // Allow significant approximation error
+        assert!((q3 - 75.0).abs() < 2.0);
+    }
+
+    #[test]
+    fn test_p2_monotonic_inputs() {
+        // Regression cases from upstream libspot PR #42. Every sample after
+        // initialization is a new extremum, but interior markers must still move.
+        let ascending: Vec<f64> = (1..=20).map(f64::from).collect();
+        let descending: Vec<f64> = ascending.iter().rev().copied().collect();
+
+        assert_relative_eq!(p2_quantile(0.5, &ascending), 10.0);
+        assert_relative_eq!(p2_quantile(0.5, &descending), 11.0);
     }
 
     #[test]
@@ -258,12 +264,11 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // P2 algorithm has known issues with quantile calculation
     fn test_p2_level_0_998() {
         // Test with level similar to what SPOT uses
         let data: Vec<f64> = (1..=1000).map(|x| x as f64).collect();
         let result = p2_quantile(0.998, &data);
         // For 99.8th percentile of 1-1000, expect around 998
-        assert!((result - 998.0).abs() < 100.0); // Very relaxed tolerance
+        assert!((result - 998.0).abs() < 5.0);
     }
 }
