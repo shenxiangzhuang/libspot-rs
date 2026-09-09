@@ -46,11 +46,14 @@ impl P2 {
         let size = data.len();
 
         if size < 5 {
-            return 0.0;
+            return f64::NAN;
         }
 
         // Initialize q with the first 5 values
         for i in 0..5 {
+            if data[i].is_nan() {
+                return f64::NAN;
+            }
             self.q[i] = data[i];
         }
 
@@ -59,6 +62,9 @@ impl P2 {
         // Process remaining values
         for j in 5..size {
             let xj = data[j];
+            if xj.is_nan() {
+                return f64::NAN;
+            }
             let k = if xj < self.q[0] {
                 // Update first marker
                 self.q[0] = xj;
@@ -189,7 +195,12 @@ fn sort5(a: &mut [f64; 5]) {
 
 /// Compute the p-quantile of the data using P2 algorithm
 /// This is the main public function that matches the C API
+/// Returns NaN if p is outside (0, 1), fewer than five samples are provided,
+/// or any sample is NaN, matching C 3.1.0.
 pub fn p2_quantile(p: f64, data: &[f64]) -> f64 {
+    if !(p > 0.0 && p < 1.0) {
+        return f64::NAN;
+    }
     let mut p2 = P2::new(p);
     p2.quantile(data)
 }
@@ -218,10 +229,61 @@ mod tests {
     }
 
     #[test]
-    fn test_p2_quantile_small_data() {
-        let data = [1.0, 2.0, 3.0];
-        let result = p2_quantile(0.5, &data);
-        assert_relative_eq!(result, 0.0); // Should return 0.0 for data < 5 elements
+    fn test_p2_rejects_short_data() {
+        let data = [1.0, 2.0, 3.0, 4.0];
+        for size in 0..=data.len() {
+            assert!(p2_quantile(0.5, &data[..size]).is_nan(), "size={size}");
+        }
+    }
+
+    #[test]
+    fn test_p2_rejects_nan_in_initial_markers() {
+        for index in 0..5 {
+            let mut data = [1.0, 2.0, 3.0, 4.0, 5.0];
+            data[index] = f64::NAN;
+            assert!(p2_quantile(0.5, &data).is_nan(), "index={index}");
+        }
+    }
+
+    #[test]
+    fn test_p2_rejects_nan_after_initial_markers() {
+        for index in 5..10 {
+            let mut data = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+            data[index] = f64::NAN;
+            assert!(p2_quantile(0.5, &data).is_nan(), "index={index}");
+        }
+    }
+
+    #[test]
+    fn test_p2_accepts_five_samples() {
+        assert_eq!(p2_quantile(0.5, &[5.0, 3.0, 4.0, 1.0, 2.0]), 3.0);
+    }
+
+    #[test]
+    fn test_p2_rejects_invalid_inputs() {
+        // Match C 3.1.0's test_p2_rejects_invalid_inputs. Rust slices cannot
+        // represent its null-pointer case; empty input is covered above.
+        let data = [0.0, 1.0, 2.0, 3.0, 4.0];
+        for p in [
+            0.0,
+            1.0,
+            -0.5,
+            1.5,
+            f64::NAN,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        ] {
+            assert!(p2_quantile(p, &data).is_nan(), "p={p}");
+        }
+    }
+
+    #[test]
+    fn test_p2_duplicate_minimum() {
+        // Same regression fixture as C 3.1.0's test_p2_duplicate_minimum.
+        let data = [
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+        ];
+        assert_eq!(p2_quantile(0.1, &data), 0.0);
     }
 
     #[test]

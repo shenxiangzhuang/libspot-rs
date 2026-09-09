@@ -6,6 +6,13 @@
 
 A pure Rust implementation of the [SPOT (Streaming Peaks Over Threshold)](https://github.com/asiffer/libspot) algorithm for real-time anomaly detection in time series data.
 
+## Unreleased
+
+P² initialization now rejects training batches with fewer than five samples
+or any NaN, returning `SpotError::ExcessThresholdIsNaN` from `fit`, as in
+C 3.1.0. P² also rejects quantile probabilities outside `(0, 1)`, including
+NaN. Empirical initial-threshold selection is unaffected.
+
 ## 0.4.0-rc.3
 
 Fix P² marker updates for observations that become a new minimum or maximum,
