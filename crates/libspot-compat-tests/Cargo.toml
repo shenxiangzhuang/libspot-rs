@@ -1,0 +1,11 @@
+[package]
+name = "libspot-compat-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Cross-implementation tests and examples for libspot and libspot-rs"
+
+[dev-dependencies]
+libspot-rs = { path = "../libspot-rs" }
+libspot = { path = "../libspot" }
+libc = "0.2"

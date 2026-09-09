@@ -4,11 +4,17 @@ on:
   push:
     branches: [ main, master ]
     paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
       - 'crates/libspot-rs/**'
       - '.github/workflows/test-libspot-rs.yaml'
   pull_request:
     branches: [ main, master ]
     paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
       - 'crates/libspot-rs/**'
       - '.github/workflows/test-libspot-rs.yaml'
   workflow_call:
@@ -36,47 +42,39 @@ jobs:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-          crates/libspot-rs/target
-        key: ${{ runner.os }}-libspot-rs-cargo-${{ hashFiles('crates/libspot-rs/Cargo.lock') }}
+          target
+        key: ${{ runner.os }}-libspot-rs-cargo-${{ hashFiles('Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-libspot-rs-cargo-
 
     - name: Check formatting (libspot-rs)
       run: |
-        cd crates/libspot-rs
-        cargo fmt --all -- --check
+        cargo fmt -p libspot-rs -- --check
 
     - name: Run clippy (libspot-rs)
       run: |
-        cd crates/libspot-rs
-        cargo clippy --all-targets --all-features -- -D warnings
+        cargo clippy -p libspot-rs --all-targets --all-features --locked -- -D warnings
 
     - name: Build libspot-rs
       run: |
-        cd crates/libspot-rs
-        cargo build --verbose
+        cargo build -p libspot-rs --locked --verbose
 
     - name: Run unit tests (libspot-rs)
       run: |
-        cd crates/libspot-rs
-        cargo test --lib --verbose
+        cargo test -p libspot-rs --locked --lib --verbose
 
     - name: Run integration tests (libspot-rs)
       run: |
-        cd crates/libspot-rs
-        cargo test --tests --all-features --verbose
+        cargo test -p libspot-rs --locked --tests --all-features --verbose
 
     - name: Test without default features (libspot-rs)
       run: |
-        cd crates/libspot-rs
-        cargo test --no-default-features --lib --tests --verbose
+        cargo test -p libspot-rs --locked --no-default-features --lib --tests --verbose
 
     - name: Run doc tests (libspot-rs)
       run: |
-        cd crates/libspot-rs
-        cargo test --doc --verbose
+        cargo test -p libspot-rs --locked --doc --verbose
 
     - name: Run examples (libspot-rs)
       run: |
-        cd crates/libspot-rs
-        cargo run --example basic
+        cargo run -p libspot-rs --locked --example basic_pure

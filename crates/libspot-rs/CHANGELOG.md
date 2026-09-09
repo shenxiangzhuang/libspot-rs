@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- chore: organize crates and compatibility tests into a Cargo workspace by [**@shenxiangzhuang**](https://github.com/shenxiangzhuang) in [#36](https://github.com/shenxiangzhuang/libspot-rs/pull/36)
 - fix(libspot-rs): align P2 input validation with C 3.1.0 by [**@shenxiangzhuang**](https://github.com/shenxiangzhuang) in [#36](https://github.com/shenxiangzhuang/libspot-rs/pull/36)
 
 ## 0.4.0-rc.3

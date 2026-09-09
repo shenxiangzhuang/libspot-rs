@@ -29,6 +29,10 @@ rustdoc-args = ["-D", "warnings", "--html-in-header", "docs/katex-header.html"]
 default = ["serde"]
 serde = ["dep:serde"]
 
+[[example]]
+name = "serialization"
+required-features = ["serde"]
+
 [dependencies]
 serde = { version = "1.0", features = ["derive"], optional = true }
 
