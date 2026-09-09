@@ -17,6 +17,7 @@ include = [
     "examples/**/*",
     "tests/**/*",
     "./README.md",
+    "CHANGELOG.md",
     "./LICENSE",
 ]
 
