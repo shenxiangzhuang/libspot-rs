@@ -1,5 +1,6 @@
 // Run identical public-API regression cases against bundled C 3.1.0 (via FFI)
-// and pure Rust, without adding C dependencies to the pure Rust crate.
+// and pure Rust in this unpublished workspace member, without adding C
+// dependencies to the pure Rust crate.
 macro_rules! p2_input_tests {
     ($module:ident, $implementation:ident) => {
         mod $module {

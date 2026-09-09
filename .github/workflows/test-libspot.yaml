@@ -4,11 +4,17 @@ on:
   push:
     branches: [ main, master ]
     paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
       - 'crates/libspot/**'
       - '.github/workflows/test-libspot.yaml'
   pull_request:
     branches: [ main, master ]
     paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
       - 'crates/libspot/**'
       - '.github/workflows/test-libspot.yaml'
   workflow_call:
@@ -38,8 +44,8 @@ jobs:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-          crates/libspot/target
-        key: ${{ runner.os }}-libspot-cargo-${{ hashFiles('crates/libspot/Cargo.lock') }}
+          target
+        key: ${{ runner.os }}-libspot-cargo-${{ hashFiles('Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-libspot-cargo-
 
@@ -56,35 +62,28 @@ jobs:
 
     - name: Check formatting (libspot)
       run: |
-        cd crates/libspot
-        cargo fmt --all -- --check
+        cargo fmt -p libspot -- --check
 
     - name: Run clippy (libspot)
       run: |
-        cd crates/libspot
-        cargo clippy --all-targets --all-features -- -D warnings
+        cargo clippy -p libspot --all-targets --all-features --locked -- -D warnings
 
     - name: Build libspot
       run: |
-        cd crates/libspot
-        cargo build --verbose
+        cargo build -p libspot --locked --verbose
 
     - name: Run unit tests (libspot)
       run: |
-        cd crates/libspot
-        cargo test --lib --verbose
+        cargo test -p libspot --locked --lib --verbose
 
     - name: Run integration tests (libspot)
       run: |
-        cd crates/libspot
-        cargo test --test integration --verbose
+        cargo test -p libspot --locked --test integration --verbose
 
     - name: Run basic example test (libspot)
       run: |
-        cd crates/libspot
-        cargo test --test basic_example test_basic_example_behavior --verbose
+        cargo test -p libspot --locked --test basic_example test_basic_example_behavior --verbose
 
     - name: Run doc tests (libspot)
       run: |
-        cd crates/libspot
-        cargo test --doc --verbose
+        cargo test -p libspot --locked --doc --verbose

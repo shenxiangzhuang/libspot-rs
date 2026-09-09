@@ -107,8 +107,8 @@ for current results and timings (Linux x86_64, release builds, `hyperfine
 --warmup 1 --runs 5`).
 
 **Benchmark Commands:**
-- **Pure Rust**: `cargo run -r --example basic` (in `crates/libspot-rs`)
-- **C FFI**: `cargo run -r --example basic` (in `crates/libspot`)
+- **Pure Rust**: `cargo run -p libspot-rs -r --example basic_pure`
+- **C FFI**: `cargo run -p libspot -r --example basic_ffi`
 - **Original C**: `cd crates/libspot/libspot && make && cc -O3 -o /tmp/basic ../examples/basic.c dist/libspot.a.$(cat version) -Idist/ -lm && /tmp/basic`
 
 ## Documentation
@@ -119,6 +119,30 @@ for current results and timings (Linux x86_64, release builds, `hyperfine
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
+
+The repository is a Cargo workspace with three members:
+
+- `libspot`: the C FFI wrapper and its tests.
+- `libspot-rs`: the pure Rust implementation and its tests.
+- `libspot-compat-tests`: cross-implementation tests and comparison examples;
+  this package is not published.
+
+All members share the root `Cargo.lock` and `target/` directory. From the
+repository root, run:
+
+```bash
+# Run tests for every workspace member (also the default for cargo test here).
+cargo test --workspace --locked
+
+# Run one package, including pure Rust without its default features.
+cargo test -p libspot-rs --no-default-features --locked
+cargo test -p libspot-compat-tests --locked
+
+# Check all members and run a comparison example.
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+cargo run -p libspot-compat-tests --release --example compare_implementations --locked
+```
 
 ## License
 

@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   consistency:
-    name: Verify all 3 implementations produce identical basic-example output
+    name: Test workspace and verify cross-implementation consistency
     runs-on: ubuntu-latest
 
     steps:
@@ -27,14 +27,21 @@ jobs:
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
 
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential pkg-config hyperfine
 
-    - name: Run all cross-implementation tests
-      run: cargo test
+    - name: Check workspace formatting and lints
+      run: |
+        cargo fmt --all -- --check
+        cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+    - name: Run all workspace tests
+      run: cargo test --workspace --all-features --locked
 
     - name: Build C library
       run: |
@@ -50,19 +57,17 @@ jobs:
         # The submodule ships a different basic.c (smaller K, different format);
         # the wrapper crate's version is the canonical source kept in sync with
         # the Rust examples.
-        cd crates/libspot
-        ARCHIVE=$(ls libspot/dist/libspot.a.* | head -n1)
+        ARCHIVE=$(ls crates/libspot/libspot/dist/libspot.a.* | head -n1)
         echo "Using archive: $ARCHIVE"
-        cc -O2 -std=c99 -o /tmp/basic_c examples/basic.c -Ilibspot/include/ "$ARCHIVE" -lm
+        cc -O2 -std=c99 -o /tmp/basic_c crates/libspot/examples/basic.c -Icrates/libspot/libspot/include/ "$ARCHIVE" -lm
 
         # Rust FFI (release)
-        cargo build --release --example basic
-        cp target/release/examples/basic /tmp/basic_ffi
+        cargo build -p libspot --release --example basic_ffi --locked
+        cp target/release/examples/basic_ffi /tmp/basic_ffi
 
         # Pure Rust (release)
-        cd ../libspot-rs
-        cargo build --release --example basic
-        cp target/release/examples/basic /tmp/basic_pure
+        cargo build -p libspot-rs --release --example basic_pure --locked
+        cp target/release/examples/basic_pure /tmp/basic_pure
 
     - name: Run each implementation once and capture output
       run: |

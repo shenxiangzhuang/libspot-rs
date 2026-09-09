@@ -1,9 +1,7 @@
-[package]
-name = "debug_compare"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-libspot-rs = { path = "crates/libspot-rs" }
-libspot = { path = "crates/libspot" }
-libc = "0.2"
+[workspace]
+members = [
+    "crates/libspot",
+    "crates/libspot-rs",
+    "crates/libspot-compat-tests",
+]
+resolver = "2"

@@ -1,34 +1,18 @@
 repos:
   - repo: local
     hooks:
-      - id: cargo-fmt-libspot
-        name: cargo fmt (libspot)
-        description: Format Rust code with rustfmt (libspot crate)
-        entry: bash -c 'cd crates/libspot && cargo fmt --all -- --check'
+      - id: cargo-fmt
+        name: cargo fmt (workspace)
+        description: Check formatting for all workspace members
+        entry: cargo fmt --all -- --check
         language: system
-        files: ^crates/libspot/.*\.rs$
+        types: [rust]
         pass_filenames: false
-      - id: cargo-clippy-libspot
-        name: cargo clippy (libspot)
-        description: Run clippy lints (libspot crate)
-        entry: bash -c 'cd crates/libspot && cargo clippy --all-targets --all-features -- -D warnings'
+      - id: cargo-clippy
+        name: cargo clippy (workspace)
+        description: Run clippy for all workspace members
+        entry: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
         language: system
-        files: ^crates/libspot/.*\.rs$
-        pass_filenames: false
-        always_run: true
-      - id: cargo-fmt-libspot-rs
-        name: cargo fmt (libspot-rs)
-        description: Format Rust code with rustfmt (libspot-rs crate)
-        entry: bash -c 'cd crates/libspot-rs && cargo fmt --all -- --check'
-        language: system
-        files: ^crates/libspot-rs/.*\.rs$
-        pass_filenames: false
-      - id: cargo-clippy-libspot-rs
-        name: cargo clippy (libspot-rs)
-        description: Run clippy lints (libspot-rs crate)
-        entry: bash -c 'cd crates/libspot-rs && cargo clippy --all-targets --all-features -- -D warnings'
-        language: system
-        files: ^crates/libspot-rs/.*\.rs$
         pass_filenames: false
         always_run: true
 
